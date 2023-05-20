@@ -76,7 +76,52 @@ module.exports = function (app) {
       return res.status(400).send("Could not get zones");
     }
   })
-//subscriptions using zones db(post):
+  //prices check price 
+  app.post("/api/v1/tickets/price/:originId/ :destinationId",async function(req,res){
+    try{
+      const {originId , destinationId } = req.body;
+      const origin = await
+      db.select("*")
+      .from("se_project.rides")
+      .where("id",origin)
+    }catch(e){
+
+    }
+  })
+  // app.post("/api/v1/tickets/price/:originId/:destinationId", async function (req, res) {
+  //   try {
+  //     const { originId, destinationId } = req.params;
+  
+  //     // Fetch origin zone price
+  //     const originZone = await db
+  //       .select("price")
+  //       .from("se_project.zones")
+  //       .where("id", originId)
+  //       .first();
+  
+  //     if (!originZone) {
+  //       return res.status(404).send("Origin zone not found");
+  //     }
+  
+  //     // Fetch destination zone price
+  //     const destinationZone = await db
+  //       .select("price")
+  //       .from("se_project.zones")
+  //       .where("id", destinationId)
+  //       .first();
+  
+  //     if (!destinationZone) {
+  //       return res.status(404).send("Destination zone not found");
+  //     }
+  
+  //     const price = originZone.price + destinationZone.price;
+  
+  //     return res.status(200).json({ price });
+  //   } catch (e) {
+  //     console.log(e.message);
+  //     return res.status(400).send("Could not check price");
+  //   }
+  // });
   
 
 
