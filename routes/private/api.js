@@ -36,18 +36,48 @@ module.exports = function (app) {
   // example
   app.put("/users", async function (req, res) {
     try {
-       const user = await getUser(req);
+      const user = await getUser(req);
      // const {userId}=req.body
-     console.log("hiiiiiiiiiii");
+      console.log("hiiiiiiiiiii");
       const users = await db.select('*').from("se_project.users")
-        
+      
       return res.status(200).json(users);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
   });
- 
+  //starting habd el code 
+  //reset password: 
+
+  app.put("/api/v1/password/reset",async function(req,res){
+    try{
+      const { email, password, newPassword } = req.body;
+
+      await db("se_project.users")
+      .where("email", email)
+      .update({ password: newPassword });
+
+    return res.status(200).send("Password reset successfully");
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("Could not reset password");
+  }
+  });
+  //subscriptions using zones db(get):
+
+  app.get("/api/v1/zones",async function(req,res){
+    try{
+      const zones = await db.select("*").from("se_project.zones");
+      return res.status(200).json(zones);
+
+    }catch(e){
+      console.log(e.message);
+      return res.status(400).send("Could not get zones");
+    }
+  })
+//subscriptions using zones db(post):
+  
 
 
   
