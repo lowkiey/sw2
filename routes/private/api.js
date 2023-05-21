@@ -65,8 +65,8 @@ module.exports = function (app) {
     return res.status(400).send("Could not reset password");
   }
   });
+  
   //subscriptions using zones db(get):
-
   app.get("/api/v1/zones",async function(req,res){
     try{
       const zones = await db.select("*").from("se_project.zones");
@@ -78,46 +78,13 @@ module.exports = function (app) {
     }
   });
   
-  // simulate a ride : 
-  app.put("/api/v1/ride/simulate", async function (req, res) {
-    try {
-      const user = await getUser(req);
+  app.post("/api/v1/payment/subscription", async function (req, res) {
+    try{
+        const transaction = await db("se_project.transactions")
+        const subscription = await db("se_project.subsription");
+       
+    }catch(e){
 
-      // if (!user.isAdmin) {
-      //   return res.status(403).send("Access denied");
-      // }
-      const { origin, destination, tripDate } = req.body;
-      //make sure that there is input 
-      if (!origin || !destination || !tripDate) {
-        return res.status(400).send("Missing required fields");
-      }
-      // Create a new ride 
-      const ride = {
-        status: "simulated",
-        origin,
-        destination,
-        userid: user.id,
-        ticketid: null, 
-        tripdate: tripDate,
-      };
-
-      // Insert the ride record into the database
-      const [rideId] = await db("se_project.rides").insert(ride).returning("id");
-
-      // Fetch the newly created ride from the database
-      const simulatedRide = await db
-        .select("*")
-        .from("se_project.rides")
-        .where("id", rideId)
-        .first();
-
-      return res.status(200).json(simulatedRide);
-    } catch (e) {
-      console.log(e.message);
-      return res.status(400).send("Can't Simulate the ride");
     }
   });
-
-
-  
 };
