@@ -100,10 +100,8 @@ module.exports = function (app) {
         ticketid: null, 
         tripdate: tripDate,
       };
-
       // Insert the ride record into the database
       const [rideId] = await db("se_project.rides").insert(ride).returning("id");
-
       // Fetch the newly created ride from the database
       const simulatedRide = await db
         .select("*")
