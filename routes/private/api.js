@@ -118,6 +118,9 @@ module.exports = function (app) {
     }
   });
 
+  app.post("/api/v1/payment/ticket", async function(req, res){
+
+  });
 
   
 };
