@@ -115,7 +115,31 @@ module.exports = function (app) {
       return res.status(400).send("Can't Simulate the ride");
     }
   });
+  //Delete Station (admin):
+  app.delete("/api/v1/station/:stationId", async function(req,res){
+    try{
+      const user = await getUser(req);
+      if (!user.isAdmin) {
+        return res.status(403).send("Access denied");
+      }else{
+        const stationid = req.params.stationid;
 
+        const deletestation = await db("se_project.stations")
+        .where("id", stationid)
+        .del();
+        
+        if (deletedstation) {
+          return res.status(200).send("Station deleted successfully");
+        } else {
+          return res.status(404).send("Station not found");
+        }
+
+      }
+    }catch(e){
+      console.log(e);
+      return res.status(400).send("Station doesn't exist to delete or Mission Failed")
+    }
+  });
 
   
 };
