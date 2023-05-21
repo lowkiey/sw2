@@ -119,21 +119,39 @@ module.exports = function (app) {
   app.delete("/api/v1/station/:stationId", async function(req,res){
     try{
       const user = await getUser(req);
-      if (!user.isAdmin) {
-        return res.status(403).send("Access denied");
-      }else{
+      if (user.isAdmin) {
         const stationid = req.params.stationid;
 
         const deletestation = await db("se_project.stations")
         .where("id", stationid)
         .del();
         
-        if (deletedstation) {
-          return res.status(200).send("Station deleted successfully");
-        } else {
-          return res.status(404).send("Station not found");
+        // if (deletestation) {
+        //   return res.status(200).send("Station deleted successfully");
+        // } else {
+        //   return res.status(404).send("Station not found");
+        // }
+        if (station.stationtype === "normal") {
+          // Handle deletion of normal station
+          // You can update the station routes as per your business logic
+          // For example, you can remove the station from the route or update the route accordingly
+          // Update the stationRoute in the database
+          await db("se_project.stationRoutes")
+            .where("route", station.stationroute)
+            .update({ /* Update the station route accordingly */ });
+        } else if (station.stationtype === "transfer") {
+          // Handle deletion of transfer station
+          // You can update the station routes as per your business logic
+          // For example, you can remove the transfer station and update the route accordingly
+          // Update the stationRoute in the database
+          await db("se_project.stationRoutes")
+            .where("route", station.stationroute)
+            .update({ /* Update the station route accordingly */ });
         }
-
+    
+        return res.status(200).send("Station deleted successfully");
+      }else{
+        return res.status(403).send("Access denied");
       }
     }catch(e){
       console.log(e);
