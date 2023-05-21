@@ -4,7 +4,7 @@ const app = express();
 const authMiddleware = require('./middleware/auth');
 const privateApiRoutes = require('./routes/private/api');
 const publicApiRoutes = require('./routes/public/api');
-// const publicViewRoutes = require('./routes/public/views');
+const publicViewRoutes = require('./routes/public/view');
 // const privateViewRoutes = require('./routes/private/views');
 
 // view engine setup
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
 // All public routes can be accessible without authentication
-// publicViewRoutes(app);
+publicViewRoutes(app);
 publicApiRoutes(app);// uncomment
 
 // If the request is not for a public view/api, then it must pass
