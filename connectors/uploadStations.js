@@ -1,3 +1,4 @@
+
 const db = require("./db");
 async function uploadSR() {
 
@@ -25,8 +26,9 @@ async function uploadSR() {
   ];
   for (let i = 0; i < SR.length; i++) {
     const element =SR[i];
-    await db("se_project.stationRoutes").insert(element).returning("*");
+    await db("se_project.stationroutes").insert(element).returning("*");
   }
+
 }
 async function uploadS() {
   let stations = [
@@ -100,6 +102,6 @@ async function uploadR() {
     await db("se_project.routes").insert(element).returning("*");
   }
 }
-uploadS();
-//uploadR();
-//uploadSR();
+uploadS(); //first to run
+//uploadR(); //second
+//uploadSR(); //third
