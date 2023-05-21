@@ -52,13 +52,13 @@ module.exports = function (app) {
 
   app.put("/api/v1/password/reset",async function(req,res){
     try{
-      const {newPassword } = req.body;
+      const {newpassword } = req.body;
       const user = await getUser(req);
       const useridn = user.userid;
       
       await db("se_project.users")
       .where("id", useridn)
-      .update({ password: newPassword });
+      .update({ password: newpassword });
     return res.status(200).send("Password reset successfully");
   } catch (e) {
     console.log(e.message);
