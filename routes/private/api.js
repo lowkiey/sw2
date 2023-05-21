@@ -33,7 +33,7 @@ const getUser = async function (req) {
 };
 
 module.exports = function (app) {
-  // example
+  
   app.put("/users", async function (req, res) {
     try {
       const user = await getUser(req);
@@ -47,18 +47,16 @@ module.exports = function (app) {
       return res.status(400).send("Could not get users");
     }
   });
-  //starting habd el code 
+  
   //reset password: 
-
   app.put("/api/v1/password/reset",async function(req,res){
     try{
-      const {newPassword } = req.body;
-      const user = await getUser(req);
-      const useridn = user.userid;
-      
+      const { email, password, newPassword } = req.body;
+
       await db("se_project.users")
-      .where("id", useridn)
+      .where("email", email)
       .update({ password: newPassword });
+
     return res.status(200).send("Password reset successfully");
   } catch (e) {
     console.log(e.message);
@@ -80,11 +78,17 @@ module.exports = function (app) {
   
   app.post("/api/v1/payment/subscription", async function (req, res) {
     try{
-        const transaction = await db("se_project.transactions")
-        const subscription = await db("se_project.subsription");
-       
-    }catch(e){
+        const user = await getUser(req);
+        const {purchaseID, creditCardNumber, holderName, payedAmount, subtype, zoneid} = req.body;
+        const transaction = {Amount: payedAmount, userid: user.id, purchaseid: purchaseID};
+        const [transactionID] = await db("se_project.transactions").insert(transaction).returning("id");
 
+        const subscription = {subtype: subtype, zoneid: zoneid, userid: user.id, numOftickets: 0};
+        const [subscriptionID] = await db("se_project.subscriptions").insert(subscription).returning("id");
+        return res.status(200).json({transactionID, subscriptionID});
+    }catch(e){
+        console.log(e.message);
+        return res.status(400).send("Could not subscribe");
     }
   });
 };
