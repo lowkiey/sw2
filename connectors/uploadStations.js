@@ -32,15 +32,15 @@ async function uploadS() {
   let stations = [
     {
       stationname: "s1",
-      stationTtype: "normal",
+      stationtype: "normal",
       stationposition: "start",
-      stationSstatus: "old",
+      stationstatus: "old",
     },
     {
       stationname: "s2",
       stationtype: "normal",
       stationposition: "middle",
-      stationSstatus: "old",
+      stationstatus: "old",
     },
     {
       stationname: "s3",
