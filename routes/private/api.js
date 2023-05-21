@@ -52,12 +52,13 @@ module.exports = function (app) {
 
   app.put("/api/v1/password/reset",async function(req,res){
     try{
-      const { email, password, newPassword } = req.body;
-
+      const {newPassword } = req.body;
+      const user = await getUser(req);
+      const useridn = user.userid;
+      
       await db("se_project.users")
-      .where("email", email)
+      .where("id", useridn)
       .update({ password: newPassword });
-
     return res.status(200).send("Password reset successfully");
   } catch (e) {
     console.log(e.message);
@@ -75,54 +76,47 @@ module.exports = function (app) {
       console.log(e.message);
       return res.status(400).send("Could not get zones");
     }
-  })
-  //prices check price 
-  app.post("/api/v1/tickets/price/:originId/ :destinationId",async function(req,res){
-    try{
-      const {originId , destinationId } = req.body;
-      const origin = await
-      db.select("*")
-      .from("se_project.rides")
-      .where("id",origin)
-    }catch(e){
+  });
+  
+  // simulate a ride : 
+  app.put("/api/v1/ride/simulate", async function (req, res) {
+    try {
+      const user = await getUser(req);
 
+      // if (!user.isAdmin) {
+      //   return res.status(403).send("Access denied");
+      // }
+      const { origin, destination, tripDate } = req.body;
+      //make sure that there is input 
+      if (!origin || !destination || !tripDate) {
+        return res.status(400).send("Missing required fields");
+      }
+      // Create a new ride 
+      const ride = {
+        status: "simulated",
+        origin,
+        destination,
+        userid: user.id,
+        ticketid: null, 
+        tripdate: tripDate,
+      };
+
+      // Insert the ride record into the database
+      const [rideId] = await db("se_project.rides").insert(ride).returning("id");
+
+      // Fetch the newly created ride from the database
+      const simulatedRide = await db
+        .select("*")
+        .from("se_project.rides")
+        .where("id", rideId)
+        .first();
+
+      return res.status(200).json(simulatedRide);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Can't Simulate the ride");
     }
-  })
-  // app.post("/api/v1/tickets/price/:originId/:destinationId", async function (req, res) {
-  //   try {
-  //     const { originId, destinationId } = req.params;
-  
-  //     // Fetch origin zone price
-  //     const originZone = await db
-  //       .select("price")
-  //       .from("se_project.zones")
-  //       .where("id", originId)
-  //       .first();
-  
-  //     if (!originZone) {
-  //       return res.status(404).send("Origin zone not found");
-  //     }
-  
-  //     // Fetch destination zone price
-  //     const destinationZone = await db
-  //       .select("price")
-  //       .from("se_project.zones")
-  //       .where("id", destinationId)
-  //       .first();
-  
-  //     if (!destinationZone) {
-  //       return res.status(404).send("Destination zone not found");
-  //     }
-  
-  //     const price = originZone.price + destinationZone.price;
-  
-  //     return res.status(200).json({ price });
-  //   } catch (e) {
-  //     console.log(e.message);
-  //     return res.status(400).send("Could not check price");
-  //   }
-  // });
-  
+  });
 
 
   
