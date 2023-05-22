@@ -65,8 +65,8 @@ module.exports = function (app) {
     return res.status(400).send("Could not reset password");
   }
   });
-  //subscriptions using zones db(get):
 
+  //subscriptions using zones db(get):
   app.get("/api/v1/zones",async function(req,res){
     try{
       const zones = await db.select("*").from("se_project.zones");
@@ -162,3 +162,5 @@ module.exports = function (app) {
 
   
 };
+
+//check price:
