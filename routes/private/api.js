@@ -92,23 +92,10 @@ module.exports = function (app) {
         return res.status(400).send("Missing required fields");
       }
       // Create a new ride 
-      const ride = {
-        status: "simulated",
-        origin,
-        destination,
-        userid: user.id,
-        ticketid: null, 
-        tripdate: tripDate,
-      };
-      // Insert the ride record into the database
-      const [rideId] = await db("se_project.rides").insert(ride).returning("id");
-      // Fetch the newly created ride from the database
-      const simulatedRide = await db
-        .select("*")
-        .from("se_project.rides")
-        .where("id", rideId)
-        .first();
-
+      //bnkhli status complete for the user using id, origin and destination and trip date.
+      const simulatedride = await db.select("*").from("se_project.rides")
+      .where("origin", origin).andWhere("destination", destination).andWhere("tripdate", tripDate)
+      simulatedride.status = "completed";
       return res.status(200).json(simulatedRide);
     } catch (e) {
       console.log(e.message);
@@ -119,39 +106,53 @@ module.exports = function (app) {
   app.delete("/api/v1/station/:stationId", async function(req,res){
     try{
       const user = await getUser(req);
-      if (user.isAdmin) {
-        const stationid = req.params.stationid;
+      if(user.isAdmin){
 
-        const deletestation = await db("se_project.stations")
-        .where("id", stationid)
-        .del();
-        
-        // if (deletestation) {
-        //   return res.status(200).send("Station deleted successfully");
-        // } else {
-        //   return res.status(404).send("Station not found");
-        // }
-        if (station.stationtype === "normal") {
-          // Handle deletion of normal station
-          // You can update the station routes as per your business logic
-          // For example, you can remove the station from the route or update the route accordingly
-          // Update the stationRoute in the database
-          await db("se_project.stationRoutes")
-            .where("route", station.stationroute)
-            .update({ /* Update the station route accordingly */ });
-        } else if (station.stationtype === "transfer") {
-          // Handle deletion of transfer station
-          // You can update the station routes as per your business logic
-          // For example, you can remove the transfer station and update the route accordingly
-          // Update the stationRoute in the database
-          await db("se_project.stationRoutes")
-            .where("route", station.stationroute)
-            .update({ /* Update the station route accordingly */ });
+        const stationid = req.params.stationid;
+        const station = await db("se_project.stations").where("id", stationid);
+        if(!station){
+          return res.status(400).send("station not found");
         }
-    
+        const deletestation = await db("se_project.stations").where("id",stationid).del();
+        if(station.stationtype == "normal"){
+          await db("se_project.stationRoutes")
+          .where("stationid", stationId)
+          .del();
+
+        // await db("se_project.stationRoutes")
+        //   .where("routeid", station.stationroute)
+        //   .update({ stationid: null });       //msh fhma a3ml eh f station routes
+
+          await db("se_project.routes")
+          .where("id", routes.routeid);
+          const newRoute = await db("se_project.routes").insert({
+          routename:"new",
+          fromStationid: station.stationid,
+          toStationid: station.stationid,
+        });
+          await db("se_project.stationRoutes").insert({
+            stationid: stationId,
+            routeid: newRoute[0],
+          });
+        }else if(station.stationtype == "transfer"){
+        
+          if(station.stationpostition == "start"){
+          
+          
+          }else if(station.stationpostition == "middle"){
+          
+          
+          }else if(station.stationpostition == "end"){ 
+            
+          }
+        }
+
+       
         return res.status(200).send("Station deleted successfully");
+
+
       }else{
-        return res.status(403).send("Access denied");
+        return res.status(400).send("Unauthorised access")
       }
     }catch(e){
       console.log(e);
