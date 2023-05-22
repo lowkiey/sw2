@@ -34,6 +34,11 @@ const getUser = async function (req) {
 
 module.exports = function (app) {
   // example
+  //if ticket's time didnt come yet 
+  //then check if the user payed online or by subscription 
+  // either ways if its an onl;ine payment or subscription cancel the trip requested for cancellation by the user
+  // refunding can be put through the transaction table only 
+  //
   app.put("/users", async function (req, res) {
     try {
        const user = await getUser(req);
