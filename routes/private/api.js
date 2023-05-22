@@ -159,8 +159,48 @@ module.exports = function (app) {
       return res.status(400).send("Station doesn't exist to delete or Mission Failed")
     }
   });
+    app.post("/api/v1/refund/:ticketId", async function (req, res) {
+      try {
+        const user = await getUser(req);
+        const { ticketId } = req.params;
+        const { refundMethod } = req.body;
+  
+        
+        const ticket = await db
+          .select("*")
+          .from("se_project.tickets")
+          .where("id", ticketId)
+          .first();
+  
+        
+        const currentDate = new Date();
+        if (ticket.date <= currentDate) {
+          return res.status(400).send("Cannot refund past-dated tickets");
+        }
+  
+        
+        await db("se_project.tickets")
+          .where("id", ticketId)
+          .delete();
+  
+       
+        const refundTransaction = {
+          userId: user.id,
+          ticketId,
+          refundMethod,
+          refundAmount: ticket.price,
+          status: "pending",
+        };
+  
+        await db("se_project.transactions").insert(refundTransaction);
+  
+        return res.status(201).json({ message: "Ticket refunded successfully" });
+      } catch (e) {
+        console.log(e.message);
+        return res.status(400).send("Could not process refund request");
+      }
+    });
 
   
 };
 
-//check price:

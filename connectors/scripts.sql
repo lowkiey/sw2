@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS se_project.transactions
 CREATE TABLE IF NOT EXISTS se_project.refund_requests
 (
     id SERIAL NOT NULL,
-    status text NOT NULL,
+    status text NOT NULL,      -- pending or accepted or rejected
     userid Integer NOT NULL, 
     refundamount INTEGER not NULL,
     ticketid INTEGER NOT null,
