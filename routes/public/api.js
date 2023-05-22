@@ -43,7 +43,7 @@ app.post("/api/v1/user", async function (req, res) {
       // If the password is not present, return an HTTP unauthorized code
       return res.status(400).send("Password is required");
     }
-
+    
     // validate the provided password against the password in the database
     // if invalid, send an unauthorized code
     const user = await db
