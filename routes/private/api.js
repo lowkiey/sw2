@@ -34,6 +34,7 @@ const getUser = async function (req) {
 
 module.exports = function (app) {
   // example
+
   app.put("/users", async function (req, res) {
     try {
       const user = await getUser(req);
@@ -164,3 +165,28 @@ module.exports = function (app) {
 };
 
 //check price:
+
+//Accept/Reject Senior
+app.put("/api/v1/requests/senior/:requestId",async function(req,res){
+  try{  
+    const user = await getUser(req);
+    let {seniorstatus}=req.body;
+    const userid = user.id;
+  if ( seniorstatus == "pending" ){
+    const nationalidcheck = db("se_project.senior_requests").select("nationalid");
+    if (nationalidcheck != null){
+      user.isSenior;
+      seniorstatus = "accepted";
+      await db("se_project.senior_requests").where("id" , userid).update({status : "accepted"});
+      return res.status(200).send("senior request is accepted");
+    }
+  }else if(seniorstatus == "rejected"){
+    await db("se_project.senior_requests").where("id" , userid).update({status : "rejected"});
+    return res.status(200).send("senior request is rejected");
+  }
+  }
+  catch(e){
+    console.log(e.message);
+    return res.status(400).send("rejected operation");
+  }
+  });
