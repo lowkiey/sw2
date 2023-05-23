@@ -169,22 +169,5 @@ app.put("/api/v1/requests/refunds/:requestId", async function (req, res) {
     return res.status(400).send("Could not accept/reject refund request");
   }
 });
-//update zones (eyad)
-app.put("/api/v1/zones/:zoneId", async function(req,res){
-  try{
-    const user = await getUser(req);
-    if(user.isAdmin){
-    const {zoneid} = req.params;
-    const {price}=req.body;
-    const updatedprice = await db("se_project.zones").where("id", zoneid).update({price});
-    return res.status(200).send(updatedprice, "updated");
-    }else{
-      return res.status(400).send("You are not authorized to update zone price");
-    }
-  } catch(e){
-    console.log(e.message);
-    return res.status(400).send("failed to update");
-} 
 
-});
 };
