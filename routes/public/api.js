@@ -80,7 +80,7 @@ app.post("/api/v1/user", async function (req, res) {
         .send("login successful");
     } catch (e) {
       console.log(e.message);
-      return res.status(400).send("Could not register user");
+      return res.status(400).send("Could not login user");
     }
   });
 }
