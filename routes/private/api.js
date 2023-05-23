@@ -88,7 +88,7 @@ module.exports = function (app) {
           numOftickets = 10;
         }else if(subtype == "quarterly"){
           numOftickets = 50; 
-        }else{
+        }else if(subtype == "yearly"){
           numOftickets = 100;
         }
         const subscription = {subtype: subtype, zoneid: zoneid, userid: user.id, numOftickets};
@@ -104,9 +104,9 @@ module.exports = function (app) {
   app.post("/api/v1/tickets/purchase/subscription", async function (req, res) {
     try{
         const user = await getUser(req);
-        const {subId, origin, destination, tripDate} = req.body;
+        const {subid, origin, destination, tripdate} = req.body;
         const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subId).andWhere("userid", user.id);
-        const tickets = {origin, destination, userid: user.id, tripdate: tripDate, subscriptionid: subId};
+        const ticket = {origin, destination, userid: user.id, tripdate: tripDate, subscriptionid: subId};
         const [ticketID] = await db("se_project.tickets").insert(tickets).returning("id");
         return res.status(200).json({ticketID});
     }catch(e){
@@ -137,13 +137,31 @@ app.delete("/api/v1/route/:routeId", async function (req, res) {
   }
 
 });
-//manageRequests(admin): accept/reject refund request
+//manageRequests(admin): accept/reject refund request (Tested)
 app.put("/api/v1/requests/refunds/:requestId", async function (req, res) {
   try{
       const user = await getUser(req);
       if(user.isAdmin){
-        const refundRequest = {requestid, Refundstatus, refundamount, ticketID}
-        const requests = await db.select("*").from("se_project.refund_requests").where("id", req.params.requestId);
+        const {refundstatus} = req.body;
+        if(refundstatus = "accepted"){
+          const deleteRide = await db("se_project.rides").where("id", ticketid).del();
+          if(ticketid == subId){ //if ticket is subscription
+            const deletesubride = await db("se_project.tickets").where("subid", subid).del();
+            return res.status(200).send(deletesubride);
+          }
+          else if(transactionid == purchaseid){ //if ticket is transaction
+            const deletetransride = await db("se_project.tickets").where("purchaseid", purchaseid).del();
+            return res.status(200).send(deletetransride);
+          }
+        }else if(refundstatus = "pending"){
+            const pendingrequest = await db("se_project.refund_requests").where("ticketid", ticketid).andWhere("userid", user.id).andWhere(payedAmount, amount).insert({pendingrequest});
+            return res.status(200).send(pendingrequest);
+        }
+        else if(refundstatus = "rejected"){
+          return res.status(200).send("Refund request rejected");
+        }
+      }else{
+          return res.status(400).send("You are not authorized to accept/reject refund request");
       }
 
   }catch(e){
