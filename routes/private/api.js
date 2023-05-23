@@ -81,7 +81,7 @@ module.exports = function (app) {
     try{
         const user = await getUser(req);
         const {purchaseid, creditcardnumber, holdername, payedamount, subtype, zoneid} = req.body;
-        const transaction = {amount: payedAmount, userid: user.id, purchaseid: purchaseid};
+        const transaction = {amount: payedamount, userid: user.id, purchaseid: purchaseid};
         const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
         let numOftickets = 0;
         if(subtype == "monthly"){
