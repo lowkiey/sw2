@@ -50,19 +50,27 @@ module.exports = function (app) {
   //starting habd el code 
   //reset password: 
 
- 
+
   app.post("/api/v1/senior/request", async function (req, res) {
-    const nationalId = req.body.nationalId;
-    const userId = users.userId;
-    const seniorRequest = { nationalId: nationalId, userId: userId, status: "pending" }
     try {
-      await db("se_project.senior_requests").insert(seniorRequest);
-      return res.status(200).send("Senior request is added successfully");
-    } catch (e) {
-      console.log(e.message);
+      const { nationalid } = req.body;
+      const user = await getUser(req);
+  
+      const seniorRequest = {
+        nationalid: nationalid,
+        status: "pending",
+        userid: user.id
+      };
+  
+      await db("se_project.senior_requests").insert(seniorRequest).returning("*");
+      
+      return res.status(200).send("Senior request has been added successfully");
+    } catch (error) {
+      console.error(error.message);
       return res.status(400).send("Could not add nationalId");
     }
-  });  app.put("/api/v1/password/reset",async function(req,res){
+  });
+    app.put("/api/v1/password/reset",async function(req,res){
     try{
       const {newPassword } = req.body;
       const user = await getUser(req);
@@ -89,5 +97,52 @@ module.exports = function (app) {
       return res.status(400).send("Could not get zones");
     }
   });
-
+  app.put("/api/v1/station/:stationId",async function(req,res){
+  if(user.isAdmin){
+      try{
+const user = await getUser(req);
+const useridd =user.userid
+const {stationid} = req.params;
+await db("se_project.stations")
+      .where("id", useridd)
+      .update({ stationid: stationid });
+      return res.status(200).send("stationId is updated successfully");
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("can not update stationId");
+  }
 }
+else{
+  return res.status(400).send("you are not an admin");
+}
+  });
+  app.put("/api/v1/route/:routeId",async function(req,res){
+    if(user.isAdmin){
+      try{
+      const user = await getUser(req);
+      const useridd =user.userid;
+      const {routeid} = req.params;
+      await db("se_project.routes")
+      .where("id", useridd)
+      .update({ routeid : routeid});
+      return res.status(200).send("routeid is updated successfully");
+      
+      }
+      catch(e){
+        console.log(e.message);
+        return res.status(400).send("can not update routeid");
+      }
+    }
+    else{
+      return res.status(400).send("you are not an admin");
+    }
+
+
+  });
+
+
+
+
+      }
+
+  
