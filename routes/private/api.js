@@ -34,7 +34,7 @@ const getUser = async function (req) {
 
 module.exports = function (app) {
   // example
-  app.put("/users", async function (req, res) {
+  app.get("/users", async function (req, res) {
     try {
       const user = await getUser(req);
      // const {userId}=req.body
