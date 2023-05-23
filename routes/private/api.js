@@ -37,25 +37,21 @@ module.exports = function (app) {
   app.put("/users", async function (req, res) {
     try {
       const user = await getUser(req);
-     // const {userId}=req.body
       console.log("hiiiiiiiiiii");
       const users = await db.select('*').from("se_project.users")
-      
       return res.status(200).json(users);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
   });
-  //starting habd el code 
-  //reset password: 
 
+  //reset password:
   app.put("/api/v1/password/reset",async function(req,res){
     try{
       const {newpassword } = req.body;
       const user = await getUser(req);
       const useridn = user.userid;
-      
       await db("se_project.users")
       .where("id", useridn)
       .update({ password: newpassword });
@@ -71,7 +67,6 @@ module.exports = function (app) {
     try{
       const zones = await db.select("*").from("se_project.zones");
       return res.status(200).json(zones);
-
     }catch(e){
       console.log(e.message);
       return res.status(400).send("Could not get zones");
@@ -82,17 +77,10 @@ module.exports = function (app) {
   app.put("/api/v1/ride/simulate", async function (req, res) {
     try {
       const user = await getUser(req);
-
-      // if (!user.isAdmin) {
-      //   return res.status(403).send("Access denied");
-      // }
       const { origin, destination, tripDate } = req.body;
-      //make sure that there is input 
       if (!origin || !destination || !tripDate) {
         return res.status(400).send("Missing required fields");
       }
-      // Create a new ride 
-      //bnkhli status complete for the user using id, origin and destination and trip date.
       const simulatedride = await db.select("*").from("se_project.rides")
       .where("origin", origin).andWhere("destination", destination).andWhere("tripdate", tripDate)
       simulatedride.status = "completed";
