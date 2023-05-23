@@ -33,7 +33,7 @@ const getUser = async function (req) {
 };
 
 module.exports = function (app) {
-// example
+//example
 app.get("/users", async function (req, res) {
     try {
       const user = await getUser(req);
@@ -120,15 +120,15 @@ app.post("/api/v1/payment/subscription", async function (req, res) {
   }
 });
 
-//tickets: POST for pay for ticket by subscription
+//tickets: POST for pay for ticket by subscription (Tested)
 app.post("/api/v1/tickets/purchase/subscription", async function (req, res) {
   try{
       const user = await getUser(req);
       const {subid, origin, destination, tripdate} = req.body;
-      const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subId).andWhere("userid", user.id);
-      const ticket = {origin, destination, userid: user.id, tripdate: tripDate, subscriptionid: subId};
-      const [ticketID] = await db("se_project.tickets").insert(tickets).returning("id");
-      return res.status(200).json({ticketID});
+      const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subid).andWhere("userid", user.id);
+      const ticket = {origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid};
+      const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
+      return res.status(200).json({ticketid});
   }catch(e){
       console.log(e.message);
       return res.status(400).send("Could not purchase ticket");
@@ -188,7 +188,7 @@ try{
 }catch(e){
   console.log(e.message);
   return res.status(400).send("Could not accept/reject refund request");
-  }
+}
 });
 
 };
