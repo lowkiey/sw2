@@ -33,8 +33,8 @@ const getUser = async function (req) {
 };
 
 module.exports = function (app) {
-  // example
-  app.get("/users", async function (req, res) {
+// example
+app.get("/users", async function (req, res) {
     try {
       const user = await getUser(req);
      // const {userId}=req.body
@@ -46,12 +46,9 @@ module.exports = function (app) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
-  });
-  //starting habd el code 
-  //reset password: 
-
-
-  app.post("/api/v1/senior/request", async function (req, res) {
+});
+//senior request (user) (Tested)
+app.post("/api/v1/senior/request", async function (req, res) {
     try {
       const { nationalid } = req.body;
       const user = await getUser(req);
@@ -69,8 +66,9 @@ module.exports = function (app) {
       console.error(error.message);
       return res.status(400).send("Could not add nationalId");
     }
-  });
-    app.put("/api/v1/password/reset",async function(req,res){
+});
+//reset password (Tested)
+app.put("/api/v1/password/reset",async function(req,res){
     try{
       const {newPassword } = req.body;
       const user = await getUser(req);
@@ -84,10 +82,10 @@ module.exports = function (app) {
     console.log(e.message);
     return res.status(400).send("Could not reset password");
   }
-  });
-  //subscriptions using zones db(get):
-
-  app.get("/api/v1/zones",async function(req,res){
+});
+  
+//subscriptions using zones db(get) (Tested)
+app.get("/api/v1/zones",async function(req,res){
     try{
       const zones = await db.select("*").from("se_project.zones");
       return res.status(200).json(zones);
@@ -96,7 +94,8 @@ module.exports = function (app) {
       console.log(e.message);
       return res.status(400).send("Could not get zones");
     }
-  });
+});
+
 //subscriptions: POST pay for subscription online (Tested)
 app.post("/api/v1/payment/subscription", async function (req, res) {
   try{
@@ -158,6 +157,7 @@ try{
 }
 
 });
+
 //manageRequests(admin): accept/reject refund request (Tested)
 app.put("/api/v1/requests/refunds/:requestId", async function (req, res) {
 try{
@@ -190,4 +190,5 @@ try{
   return res.status(400).send("Could not accept/reject refund request");
   }
 });
+
 };
