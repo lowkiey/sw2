@@ -158,37 +158,48 @@ try{
 
 });
 
-//manageRequests(admin): accept/reject refund request (Tested)
-app.put("/api/v1/requests/refunds/:requestId", async function (req, res) {
-try{
+// manageRequests(admin): accept/reject refund request (Tested)
+app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
+  try {
     const user = await getUser(req);
-    if(user.isAdmin){
-      const {refundstatus} = req.body;
-      if(refundstatus = "accepted"){
-        const deleteRide = await db("se_project.rides").where("id", ticketid).del();
-        if(ticketid == subId){ //if ticket is subscription
-          const deletesubride = await db("se_project.tickets").where("subid", subid).del();
+    if (user.isAdmin) {
+      console.log(user.roleid);
+      const { refundstatus } = req.body;
+      const { requestid } = req.params;
+      const refundrequest = await db("se_project.refund_requests").where("id", requestid).first();
+      const ticketid = refundrequest.ticketid;
+      console.log(ticketid);
+      console.log(requestid);
+      if (refundstatus === "Accept") {
+        console.log(refundstatus);
+        const subid = await db("se_project.tickets").where("id", ticketid).select("subid").first();
+        const transactionid = await db("se_project.tickets").where("id", ticketid).select("purchaseid").first();
+        if (subid && ticketid === subid.subid) { // if ticket is subscription
+          const deletesubride = await db("se_project.tickets").where("subid", subid.subid).del();
+          const ticketamount = await db("se_project.tickets").where("subid", subid.subid).select("nooftickets").first();
+          // Update the ticketamount logic as per your requirements
+          ticketamount.nooftickets = ticketamount.nooftickets + 1;
+          // Update the ticketamount back to the database
+          await db("se_project.tickets").where("subid", subid.subid).update("nooftickets", ticketamount.nooftickets);
           return res.status(200).send(deletesubride);
+        } else if (transactionid && ticketid === transactionid.purchaseid) { // if ticket is transaction
+          const deleteticket = await db("se_project.tickets").where("id", ticketid).del();
+          return res.status(200).send("Deleted Successfully");
         }
-        else if(transactionid == purchaseid){ //if ticket is transaction
-          const deletetransride = await db("se_project.tickets").where("purchaseid", purchaseid).del();
-          return res.status(200).send(deletetransride);
-        }
-      }else if(refundstatus = "pending"){
-          const pendingrequest = await db("se_project.refund_requests").where("ticketid", ticketid).andWhere("userid", user.id).andWhere(payedAmount, amount).insert({pendingrequest});
-          return res.status(200).send(pendingrequest);
+      } else if (refundstatus === "Reject") {
+        console.log(refundstatus);
+        const deleteRequest = await db("se_project.refund_requests").where("id", requestid).del();
+        return res.status(200).send("Deleted Successfully");
       }
-      else if(refundstatus = "rejected"){
-        return res.status(200).send("Refund request rejected");
-      }
-    }else{
-        return res.status(400).send("You are not authorized to accept/reject refund request");
+    } else {
+      return res.status(400).send("You are not authorized to accept/reject refund requests");
     }
-
-}catch(e){
-  console.log(e.message);
-  return res.status(400).send("Could not accept/reject refund request");
-}
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("Could not accept/reject refund request");
+  }
 });
+
+
 
 };
