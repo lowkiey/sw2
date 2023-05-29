@@ -24,7 +24,6 @@
             <li><a href="/stations_example">Station</a></li>
             <li><a href="/users">Users</a></li>
             <li><a href="/users/add">Add Users</a></li>
-            <li><a href="/test">Test</a></li>
             <li><a href="/">Logout</a></li>
           </ul>
        </nav>
