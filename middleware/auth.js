@@ -3,7 +3,7 @@ const db = require('../connectors/db');
 const roles = require('../constants/roles');
 const { getSessionToken } = require('../utils/session');
 
-module.exports = async function(req, res, next) {
+module.exports = async function (req, res, next) {
   const sessionToken = getSessionToken(req);
   if (!sessionToken) {
     return res.status(301).redirect('/');
@@ -16,7 +16,7 @@ module.exports = async function(req, res, next) {
     // If the session token is not present in session map, return an unauthorized error
     return res.status(301).redirect('/');
   }
-  // if the session has expired, return an unauthorized error, and delete the 
+  // if the session has expired, return an unauthorized error, and delete the
   // session from our map
   if (new Date() > userSession.expiresat) {
     return res.status(301).redirect('/');

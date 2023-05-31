@@ -9,12 +9,12 @@ const privateViewRoutes = require('./routes/private/view');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hjs');
+app.set('view engine', 'hjs');  //which page im gonna load, using which extention of the pages
 // Config setup to allow our HTTP server to serve static files from our public directory
-app.use(express.static('public'));
+app.use(express.static('public'));  //el folder el esmo public khlih static 
 // Config setup to parse JSON payloads from HTTP POST request body
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({extended:true}));  //btsm7 en a pass array 
 
 // All public routes can be accessible without authentication
 publicViewRoutes(app);

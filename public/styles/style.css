@@ -1,3 +1,33 @@
+.centerImg {
+  display: block;
+  margin: 0 auto;
+}
+
 .center {
   text-align: center;
+}
+
+.city {
+  text-align: left;
+  color: aqua;
+  background-color: black;
+}
+
+.centered-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.enlarged-button {
+  padding: 12px 24px;
+  width: 100%;
+  font-size: 16px;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.dashboard-background {
+  background-image: url('images/background.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
 }
