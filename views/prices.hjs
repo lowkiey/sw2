@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Query Results</title>
+  </head>
+  <body onload="fetchResults()">
+    <h1>My Query Results</h1>
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th>Column 1</th>
+          <th>Column 2</th>
+          <th>Column 3</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <script src="path/to/your/script.js"></script>
+  </body>
+</html>

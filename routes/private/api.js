@@ -390,4 +390,129 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
     }
   });
 //this is martina's code
+//Starting farah's code 
+
+app.post("/api/v1/senior/request", async function (req, res) {
+  try {
+    const { nationalid } = req.body;
+    const user = await getUser(req);
+
+    const seniorRequest = {
+      nationalid: nationalid,
+      status: "pending",
+      userid: user.id
+    };
+
+    await db("se_project.senior_requests").insert(seniorRequest).returning("*");
+
+    return res.status(200).send("Senior request has been added successfully");
+  } catch (error) {
+    console.error(error.message);
+    return res.status(400).send("Could not add nationalId");
+  }
+});
+
+//update station(admin) done
+app.put("/api/v1/station/:stationId", async function (req, res) {
+  try {
+    const user = await getUser(req);
+    const useridd = user.userid
+    if (user.isAdmin) {
+      // const {stationname} = req.body;
+      //const {stationid} = req.params;
+      await db("se_project.stations")
+        .where({ id: req.params.stationId })
+        .update({ stationname: req.body.stationname, id: req.params.stationId });
+      return res.status(200).send("stationId is updated successfully");
+    } else {
+      return res.status(400).send("you are not an admin");
+    }
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("can not update stationId");
+  }
+});
+//update route(admin) done
+app.put("/api/v1/route/:routeId", async function (req, res) {
+  try {
+    const price = 0;
+    const user = await getUser(req);
+    const useridd = user.userid;
+    if (user.isAdmin) {
+      //onst {routeid} = req.params;
+      await db("se_project.routes")
+        .where({ id: req.params.routeId })
+        .update({ routename: req.body.routename, id: req.params.routeId });
+      return res.status(200).send("routeid is updated successfully");
+    }
+    else {
+      return res.status(400).send("you are not an admin");
+    }
+  }
+  catch (e) {
+    console.log(e.message);
+    return res.status(400).send("can not update routeid");
+  }
+});
+
+
+
+
+//check price
+app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
+  // const { originId, destinationId } = req.params;
+  // const route = await db.select('*').from('se_project.routes').where('fromstationid', originId).andWhere('tostationid', destinationId);
+  // console.log(route);
+  // res.status(200).json(route);
+  //});
+  // try {
+  let { originId, destinationId } = req.params;
+  let stationsCount = 1;
+  let destinationReached = false;
+  let visitedStationsSet = new Set();
+  visitedStationsSet.add(originId);
+  //ghalat
+
+  while (true) {
+    const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', originId);
+    stationsCount++;
+    let furthestStationId = 0;
+
+    for (let i = 0; i < toStationidsObjects.length; i++) {
+      let toStationId = toStationidsObjects[i].tostationid;
+      if (visitedStationsSet.has(toStationId)) {
+        continue;
+      } else {
+        visitedStationsSet.add(toStationId);
+      }
+      if (toStationId == destinationId) {
+        destinationReached = true;
+        break;
+      }
+      if (toStationId < destinationId && toStationId > furthestStationId) {
+        furthestStationId = toStationId;
+      }
+    }
+
+    if (destinationReached) {
+      break;
+    }
+    originId = furthestStationId;
+  }
+  if (stationsCount <= 9) {
+    price = 5;
+  }
+  else if (stationsCount >= 10 & stationsCount <= 16) {
+    price = 7;
+  }
+  else {
+    price = 10;
+  }
+  // res.status(200).send("price of ticket equal:", price);
+  res.status(200).json({stationsCount: stationsCount, price: price});
+
+
+});
+
+//end of farah's code
 };
