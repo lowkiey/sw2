@@ -37,15 +37,11 @@ module.exports = function(app) {
   });
 
   // Register HTTP endpoint to render /courses page
-  app.get('/stations_example', async function(req, res) {
+  app.get('/stations', async function(req, res) {
     const user = await getUser(req);
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
 
-    // Register HTTP endpoint to render /subscriptions page
-    app.get('/subscriptions', async function(req, res) {
-      const subscriptions = await db.select('*').from('se_project.subsription');
-      return res.render('subscriptions');
-  });
 };
+  
