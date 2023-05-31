@@ -18,10 +18,10 @@ module.exports = async function(req, res, next) {
   }
   // if the session has expired, return an unauthorized error, and delete the 
   // session from our map
-  if (new Date() > userSession.expiresAt) {
+  if (new Date() > userSession.expiresat) {
     return res.status(301).redirect('/');
   }
-
+   console.log("hi from auth",sessionToken)
   // If all checks have passed, we can consider the user authenticated and
   next();
 };
