@@ -2,13 +2,13 @@ const { isEmpty } = require("lodash");
 const { v4 } = require("uuid");
 const db = require("../../connectors/db");
 const roles = require("../../constants/roles");
-const {getSessionToken}=require('../../utils/session')
+const { getSessionToken } = require('../../utils/session')
 const getUser = async function (req) {
   const sessionToken = getSessionToken(req);
   if (!sessionToken) {
     return res.status(301).redirect("/");
   }
-  console.log("hi",sessionToken);
+  console.log("hi", sessionToken);
   const user = await db
     .select("*")
     .from("se_project.sessions")
@@ -23,13 +23,12 @@ const getUser = async function (req) {
       "se_project.users.roleid",
       "se_project.roles.id"
     )
-   .first();
+    .first();
 
   console.log("user =>", user);
   user.isNormal = user.roleid === roles.user;
   user.isAdmin = user.roleid === roles.admin;
   user.isSenior = user.roleid === roles.senior;
-  console.log("user =>", user)
   return user;
 };
 
@@ -37,7 +36,9 @@ module.exports = function (app) {
   // example
   app.get("/users", async function (req, res) {
     try {
-       const user = await getUser(req);
+      const user = await getUser(req);
+     // const {userId}=req.body
+      console.log("hiiiiiiiiiii");
       const users = await db.select('*').from("se_project.users")
         
       return res.status(200).json(users);
@@ -45,35 +46,24 @@ module.exports = function (app) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
-   
   });
-//senior request (user) (Tested)
-app.post("/api/v1/senior/request", async function (req, res) {
-    try {
-      const { nationalid } = req.body;
-      const user = await getUser(req);
-  
-      const seniorRequest = {
-        nationalid: nationalid,
-        status: "pending",
-        userid: user.id
-      };
-  
-      await db("se_project.senior_requests").insert(seniorRequest).returning("*");
-      
-      return res.status(200).send("Senior request has been added successfully");
-    } catch (error) {
-      console.error(error.message);
-      return res.status(400).send("Could not add nationalId");
-    }
-});
-//reset password (Tested)
-app.put("/api/v1/password/reset",async function(req,res){
+  //starting habd el code 
+  //reset password: 
+
+  app.put("/api/v1/password/reset",async function(req,res){
     try{
       const {newPassword } = req.body;
       const user = await getUser(req);
       const useridn = user.userid;
-      
+
+      if (!newpassword) {
+        return res.status(400).send("Please provide a new password");
+      }
+
+      if (newpassword === user.password) {
+        return res.status(400).send("New password cannot be the same as the old password");
+      }
+
       await db("se_project.users")
       .where("id", useridn)
       .update({ password: newPassword });
@@ -82,10 +72,10 @@ app.put("/api/v1/password/reset",async function(req,res){
     console.log(e.message);
     return res.status(400).send("Could not reset password");
   }
-});
-  
-//subscriptions using zones db(get) (Tested)
-app.get("/api/v1/zones",async function(req,res){
+  });
+  //subscriptions using zones db(get):
+
+  app.get("/api/v1/zones",async function(req,res){
     try{
       const zones = await db.select("*").from("se_project.zones");
       return res.status(200).json(zones);
@@ -93,113 +83,49 @@ app.get("/api/v1/zones",async function(req,res){
     }catch(e){
       console.log(e.message);
       return res.status(400).send("Could not get zones");
-    }
-});
-
-//subscriptions: POST pay for subscription online (Tested)
-app.post("/api/v1/payment/subscription", async function (req, res) {
-  try{
-      const user = await getUser(req);
-      const {purchaseid, creditcardnumber, holdername, payedamount, subtype, zoneid} = req.body;
-      const transaction = {amount: payedamount, userid: user.id, purchaseid: purchaseid};
-      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
-      let numOftickets = 0;
-      if(subtype == "monthly"){
-        numOftickets = 10;
-      }else if(subtype == "quarterly"){
-        numOftickets = 50; 
-      }else if(subtype == "yearly"){
-        numOftickets = 100;
-      }
-      const subscription = {subtype: subtype, zoneid: zoneid, userid: user.id, numOftickets};
-      const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("id");
-      return res.status(200).json({transactionid, subscriptionid});
-  }catch(e){
-      console.log(e.message);
-      return res.status(400).send("Could not subscribe");
-  }
-});
-
-//tickets: POST for pay for ticket by subscription (Tested)
-app.post("/api/v1/tickets/purchase/subscription", async function (req, res) {
-  try{
-      const user = await getUser(req);
-      const {subid, origin, destination, tripdate} = req.body;
-      const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subid).andWhere("userid", user.id);
-      const ticket = {origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid};
-      const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
-      return res.status(200).json({ticketid});
-  }catch(e){
-      console.log(e.message);
-      return res.status(400).send("Could not purchase ticket");
-  }
-});
-
-//manageRoutes(admin): delete route
-app.delete("/api/v1/route/:routeId", async function (req, res) {
-try{
-    const user = await getUser(req);
-    if(user.isAdmin){
-        const routeid = req.params.routeid;
-        const deleteroute = await db("se_project.routes").where("id", routeid).del();
-          if(deleteroute){
-            return res.status(200).send("Route deleted successfully");
-          }
-          else{
-            return res.status(400).send("Could not delete route");
-          }
-    }else{
-        return res.status(400).send("You are not authorized to delete route");
     }
-}catch(e){
-  console.log(e.message);
-  return res.status(400).send("Could not delete route");
-}
+  });
+  
+  // simulate a ride : 
+  app.put("/api/v1/ride/simulate", async function (req, res) {
+    try {
+      const user = await getUser(req);
 
-});
-
-// manageRequests(admin): accept/reject refund request (Tested)
-app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
-  try {
-    const user = await getUser(req);
-    if (user.isAdmin) {
-      console.log(user.roleid);
-      const { refundstatus } = req.body;
-      const { requestid } = req.params;
-      const refundrequest = await db("se_project.refund_requests").where("id", requestid).first();
-      const ticketid = refundrequest.ticketid;
-      console.log(ticketid);
-      console.log(requestid);
-      if (refundstatus === "Accept") {
-        console.log(refundstatus);
-        const subid = await db("se_project.tickets").where("id", ticketid).select("subid").first();
-        const transactionid = await db("se_project.tickets").where("id", ticketid).select("purchaseid").first();
-        if (subid && ticketid === subid.subid) { // if ticket is subscription
-          const deletesubride = await db("se_project.tickets").where("subid", subid.subid).del();
-          const ticketamount = await db("se_project.tickets").where("subid", subid.subid).select("nooftickets").first();
-          // Update the ticketamount logic as per your requirements
-          ticketamount.nooftickets = ticketamount.nooftickets + 1;
-          // Update the ticketamount back to the database
-          await db("se_project.tickets").where("subid", subid.subid).update("nooftickets", ticketamount.nooftickets);
-          return res.status(200).send(deletesubride);
-        } else if (transactionid && ticketid === transactionid.purchaseid) { // if ticket is transaction
-          const deleteticket = await db("se_project.tickets").where("id", ticketid).del();
-          return res.status(200).send("Deleted Successfully");
-        }
-      } else if (refundstatus === "Reject") {
-        console.log(refundstatus);
-        const deleteRequest = await db("se_project.refund_requests").where("id", requestid).del();
-        return res.status(200).send("Deleted Successfully");
+      // if (!user.isAdmin) {
+      //   return res.status(403).send("Access denied");
+      // }
+      const { origin, destination, tripDate } = req.body;
+      //make sure that there is input 
+      if (!origin || !destination || !tripDate) {
+        return res.status(400).send("Missing required fields");
       }
-    } else {
-      return res.status(400).send("You are not authorized to accept/reject refund requests");
+      // Create a new ride 
+      const ride = {
+        status: "simulated",
+        origin,
+        destination,
+        userid: user.id,
+        ticketid: null, 
+        tripdate: tripDate,
+      };
+
+      // Insert the ride record into the database
+      const [rideId] = await db("se_project.rides").insert(ride).returning("id");
+
+      // Fetch the newly created ride from the database
+      const simulatedRide = await db
+        .select("*")
+        .from("se_project.rides")
+        .where("id", rideId)
+        .first();
+
+      return res.status(200).json(simulatedRide);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Can't Simulate the ride");
     }
-  } catch (e) {
-    console.log(e.message);
-    return res.status(400).send("Could not accept/reject refund request");
-  }
-});
+  });
 
 
-
+  
 };

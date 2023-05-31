@@ -92,11 +92,11 @@ CREATE TABLE IF NOT EXISTS se_project.refund_requests
 (
     id SERIAL NOT NULL,
     status text NOT NULL,
-    userid Integer NOT NULL, 
-    refundamount INTEGER not NULL,
-    ticketid INTEGER NOT null,
-    FOREIGN KEY( userid ) REFERENCES se_project.users,
-    FOREIGN KEY( ticketid ) REFERENCES se_project.tickets,
+    userId Integer NOT NULL, 
+    refundAmount INTEGER not NULL,
+    ticketId INTEGER NOT null,
+    FOREIGN KEY( userId ) REFERENCES se_project.users,
+    FOREIGN KEY( ticketId ) REFERENCES se_project.tickets,
     CONSTRAINT refund_requests_pkey PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS se_project.senior_requests
