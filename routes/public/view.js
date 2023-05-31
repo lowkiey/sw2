@@ -1,4 +1,3 @@
-
 const db = require('../../connectors/db');
 
 module.exports = function(app) {

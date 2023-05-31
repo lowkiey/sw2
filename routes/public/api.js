@@ -62,7 +62,7 @@ app.post("/api/v1/user", async function (req, res) {
     // set the expiry time as 15 minutes after the current time
     token = v4();
     const currentDateTime = new Date();
-    const expiresAt = new Date(+currentDateTime + 900000); // expire in 15 minutes
+    const expiresat = new Date(+currentDateTime + 900000); // expire in 15 minutes
 
     // create a session containing information about the user and expiry time
     const session = {
@@ -80,7 +80,7 @@ app.post("/api/v1/user", async function (req, res) {
         .send("login successful");
     } catch (e) {
       console.log(e.message);
-      return res.status(400).send("Could not login user");
-    }
-  });
+      return res.status(400).send("Could not register user");
+    }
+  });
 }

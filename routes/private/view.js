@@ -42,8 +42,10 @@ module.exports = function(app) {
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
-  app.get('/newpassword', async function(req, res) { 
-    const user = await getUser(req);
-    return res.render('newpassword', user);
+
+    // Register HTTP endpoint to render /subscriptions page
+    app.get('/subscriptions', async function(req, res) {
+      const subscriptions = await db.select('*').from('se_project.subsription');
+      return res.render('subscriptions');
   });
 };
