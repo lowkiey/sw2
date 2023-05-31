@@ -29,24 +29,24 @@ const getUser = async function (req) {
   user.isNormal = user.roleid === roles.user;
   user.isAdmin = user.roleid === roles.admin;
   user.isSenior = user.roleid === roles.senior;
+  console.log("user =>", user)
   return user;
 };
 
 module.exports = function (app) {
-//example
-app.get("/users", async function (req, res) {
+  // example
+  app.get("/users", async function (req, res) {
     try {
-      const user = await getUser(req);
-     // const {userId}=req.body
-      console.log("hiiiiiiiiiii");
+       const user = await getUser(req);
       const users = await db.select('*').from("se_project.users")
-      
+        
       return res.status(200).json(users);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
-});
+   
+  });
 //senior request (user) (Tested)
 app.post("/api/v1/senior/request", async function (req, res) {
     try {

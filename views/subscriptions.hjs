@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Users</title>
+  <title>Subscriptions</title>
   <link rel='stylesheet' href='/styles/bootstrap.min.css' />
   <link rel='stylesheet' href='/styles/style.css' />
   <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
@@ -12,7 +12,7 @@
     $(document).ready(function () {
       $.ajax({
         type: "GET",
-        url: '/api/v1/user',
+        url: '/api/v1/zones',
         success: function (data) {
           console.log(data);
 
@@ -23,11 +23,11 @@
             $('#tbody').append(`
               <tr>
                 <td class="text-center">${row.id}</td>
-                <td class="text-center">${row.firstname}</td>
-                <td class="text-center">${row.lastname}</td>
-                <td class="text-center">${row.email}</td>
-                <td class="text-center">${row.password}</td>
-                <td class="text-center">${row.roleid}</td>
+                <td class="text-center">${row.subtype}</td>
+                <td class="text-center">${row.zoneid}</td>
+                <td class="text-center">${row.userid}</td>
+                <td class="text-center">${row.nooftickets}</td>
+               
               </tr>
             `);
           }
@@ -45,8 +45,10 @@
       <ul class="nav navbar-nav">
         <li><a href="/dashboard">Home</a></li>
         <li><a href="/stations_example">Stations</a></li>
-        <li class="active"><a href="/users">Users</a></li>
+        <li class="active"><a href="/users">Users</a></li>  
+         <li><a href="/test">Stations</a></li>
         <li><a href="/users/add">Add Users</a></li>
+        <li><a href="/subscriptions">Subscriptions</a></li>
         <li><a href="/">Logout</a></li>
       </ul>
     </nav>
@@ -57,11 +59,10 @@
       <thead>
         <tr>
           <th class="text-center">id</th>
-          <th class="text-center">firstname</th>
-          <th class="text-center">lastname</th>
-          <th class="text-center">email</th>
-          <th class="text-center">password</th>
-          <th class="text-center">roleid</th>
+          <th class="text-center">zoneid</th>
+          <th class="text-center">userid</th>
+          <th class="text-center">nooftickets</th>
+          <th class="text-center">subtype</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>

@@ -81,6 +81,18 @@ app.post("/api/v1/user", async function (req, res) {
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not login user");
-    }
-  });
+    }
+  });
+
+  app.get("/api/v1/zones",async function(req,res){
+    try{
+      const zones = await db.select("*").from("se_project.zones");
+      return res.status(200).json(zones);
+
+    }catch(e){
+      console.log(e.message);
+      return res.status(400).send("Could not get zones");
+    }
+});
+
 }
