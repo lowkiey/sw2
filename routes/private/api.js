@@ -29,24 +29,24 @@ const getUser = async function (req) {
   user.isNormal = user.roleid === roles.user;
   user.isAdmin = user.roleid === roles.admin;
   user.isSenior = user.roleid === roles.senior;
+  console.log("user =>", user)
   return user;
 };
 
 module.exports = function (app) {
   // example
-  app.put("/users", async function (req, res) {
+  app.get("/users", async function (req, res) {
     try {
-      const user = await getUser(req);
-     // const {userId}=req.body
-      console.log("hiiiiiiiiiii");
+       const user = await getUser(req);
       const users = await db.select('*').from("se_project.users")
-      
+        
       return res.status(200).json(users);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
-  });
+   
+  });     
   //starting habd el code 
   //reset password: 
 
@@ -78,52 +78,53 @@ module.exports = function (app) {
     }
   });
 
-  //pay ticket online with credit card
-  app.post("/api/v1/payment/ticket", async function(req, res){
-    try{
-    const { purchasedId, creditCardNumber, holderName, payedAmount, origin, destination, tripDate } = req.body;
-    const user = await getUser(req);
+  //pay ticket online 
+  // app.post("/api/v1/payment/ticket", async function(req, res){
+  //   try{
+  //   const { purchasedId, creditCardNumber, holderName, payedAmount, origin, destination, tripDate } = req.body;
+  //   const user = await getUser(req);
 
-    // Check if required fields are missing
-    if (!purchasedId || !creditCardNumber || !holderName || !payedAmount || !origin || !destination || !tripDate) {
-      return res.status(400).send("Missing required fields");
-    }
+  //   // Check if required fields are missing
+  //   if (!purchasedId || !creditCardNumber || !holderName || !payedAmount || !origin || !destination || !tripDate) {
+  //     return res.status(400).send("Missing required fields");
+  //   }
 
-    // Create a new ticket object
-    const ticket = {
-      origin,
-      destination,
-      userid: user.id,
-      subid: purchasedId,
-      tripdate: tripDate,
-    };
+  //   // Create a new ticket object
+  //   const ticket = {
+  //     origin,
+  //     destination,
+  //     userid: user.id,
+  //     subid: purchasedId,
+  //     tripdate: tripDate,
+  //   };
     
-    // Insert the ticket record into the database
-    const [ticketId] = await db("se_project.tickets").insert(ticket).returning("id");
+  //   // Insert the ticket record into the database
+  //   const [ticketId] = await db("se_project.tickets").insert(ticket).returning("id");
 
-    // Fetch the newly created ticket from the database
-    const purchasedTicket = await db
-      .select("*")
-      .from("se_project.tickets")
-      .where("id", ticketId)
-      .first();
+  //   // Fetch the newly created ticket from the database
+  //   const purchasedTicket = await db
+  //     .select("*")
+  //     .from("se_project.tickets")
+  //     .where("id", ticketId)
+  //     .first();
 
-    return res.status(200).json(purchasedTicket);
-  } 
-  catch (e) {
-    console.log(e.message);
-    return res.status(400).send("Could not purchase ticket");
-  }
+  //   return res.status(200).json(purchasedTicket);
+  // } 
+  // catch (e) {
+  //   console.log(e.message);
+  //   return res.status(400).send("Could not purchase ticket");
+  // }
 
-  });
+  // });
   //ADMIN create a station
+ 
   app.post ("/api/v1/station", async function (req, res){
     const user= await getUser(req);
     if(user.isAdmin){
+      try{
       const stationname = req.body;
       const userid=user.userid;
-      try{
-        await db("se_project.stations").insert(stationname);
+        await db("se_project.stations").where("id" , userid).insert({"stationname": stationname , "stationtype": "normal" , "stationstatus" :"new"});
         return res.status(200).send("Station Created!");
       }
       catch(e){
@@ -135,7 +136,6 @@ module.exports = function (app) {
       return res.status(400).send("You can't create station");
 
     }
-   
   });
 
 
@@ -207,5 +207,25 @@ module.exports = function (app) {
       }
     
   });
-
+  ///pay ticket for subscription:
+  app.post("/api/v1/payment/ticket", async function (req, res) {
+    try{
+        const user = await getUser(req);
+        const useridsubscription = await db.select("userid").from("se_project.subsription");
+        if(useridsubscription != user.id){
+        const {purchasediid, creditcardnumber, holdername, payedamount, origin, destination, tripdate} = req.body;
+        const transaction = {amount: payedamount, userid: user.id, purchasediid: purchasediid};
+        const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
+        //insert ticket into upcoming ride 
+        //const ticketinsert = await db("se_project.rides").insert(tripdate).returning("id","tripdate");
+        return res.status(200).json({transactionid});
+        }else{
+          return res.status(200).send("user has a subscription");
+        }
+    }catch(e){
+        console.log(e.message);
+        return res.status(400).send("Could not subscribe");
+    }
+  });
+  //this is farida's code
 };

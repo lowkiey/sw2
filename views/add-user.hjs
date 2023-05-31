@@ -39,13 +39,15 @@
     <div>
     <div>
     <nav class="navbar navbar-inverse" style="padding-left:130px;">
-           <ul class="nav navbar-nav">
+      <ul class="nav navbar-nav">
         <li><a href="/dashboard">Home</a></li>
-        <li ><a href="/stations_example">stations</a></li>
-        <li><a href="/users">Users</a></li>
-        <li><a class="active" href="/users/add">Add Users</a></li>
-        <li><a href="/">Logout</a></li>    
-        </ul>
+        <li><a href="/stations_example">Stations</a></li>
+        <li class="active"><a href="/users">Users</a></li>
+        <li><a href="/users/add">Add Users</a></li>
+        <li><a href="/">Logout</a></li> 
+        <li><a href="/tickets">Tickets</a></li>
+
+      </ul>
   </nav>
   </div>
     <br/>
