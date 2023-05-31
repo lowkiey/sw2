@@ -91,12 +91,12 @@ CREATE TABLE IF NOT EXISTS se_project.transactions
 CREATE TABLE IF NOT EXISTS se_project.refund_requests
 (
     id SERIAL NOT NULL,
-    status text NOT NULL,      -- pending or accepted or rejected
-    userid Integer NOT NULL, 
-    refundamount INTEGER not NULL,
-    ticketid INTEGER NOT null,
-    FOREIGN KEY( userid ) REFERENCES se_project.users,
-    FOREIGN KEY( ticketid ) REFERENCES se_project.tickets,
+    status text NOT NULL,
+    userId Integer NOT NULL, 
+    refundAmount INTEGER not NULL,
+    ticketId INTEGER NOT null,
+    FOREIGN KEY( userId ) REFERENCES se_project.users,
+    FOREIGN KEY( ticketId ) REFERENCES se_project.tickets,
     CONSTRAINT refund_requests_pkey PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS se_project.senior_requests
@@ -138,7 +138,4 @@ CREATE TABLE IF NOT EXISTS se_project.stationRoutes
     FOREIGN KEY( stationid ) REFERENCES se_project.stations on DELETE CASCADE on UPDATE CASCADE,
     FOREIGN KEY( routeid ) REFERENCES se_project.routes on DELETE CASCADE on UPDATE CASCADE
 );
-
-
-
 
