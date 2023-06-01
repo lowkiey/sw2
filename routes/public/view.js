@@ -15,8 +15,5 @@ module.exports = function (app) {
       const users = await db.select('*').from('se_project.users');
       return res.render('user', { users });
     });
-    app.get('/tickets', async function (req, res) {
-      const tickets = await db.select('*').from('se_project.tickets');
-      return res.render('tickets', {tickets});
-    });
+  
 };

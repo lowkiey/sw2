@@ -43,5 +43,22 @@ module.exports = function(app) {
     return res.render('stations_example', { ...user, stations });
   });
 
+  app.get('/tickets', async function (req, res) {
+    const tickets = await db.select('*').from('se_project.tickets');
+    return res.render('tickets', {tickets});
+  });
+  app.get('/newpassword', async function(req, res) {
+    const user = await getUser(req);
+    return res.render('newpassword', {user: user});
+  });
+  app.get('/prices', async function(req, res) {
+    const stations = await db.select('*').from('se_project.stations');
+    return res.render('prices', { stations }); 
+  });
+  app.get('/senior', async function(req, res) {
+   const seniorRequest = await db.select('*').from('se_project.senior_requests');
+    return res.render('senior', { seniorRequest });
+
+  });
 };
   
