@@ -111,18 +111,22 @@ module.exports = function (app) {
     try {
       const user = await getUser(req);
       const { subid, origin, destination, tripdate } = req.body;
-      const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subid).andWhere("userid", user.id);
-      const ticket = { origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid };
+      // console.log(subid);
+      const subscription = await db.select("*").from("se_project.subsription").where("id", subid).first();
+      console.log(subscription.id);
+      const ticket = { origin:origin, destination:destination, userid: user.id, tripdate: tripdate, subid: subscription.id };
+      console.log(ticket.tripdate);
       const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
-      return res.status(200).json({ ticketid });
+      console.log(ticketid);
+      return res.status(200).json({ tickAZetid });
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not purchase ticket");
     }
   });
+  
 
-
-  // manageRequests(admin): accept/reject refund request (Tested)
+  // manageRequests(admin): accept/reject refund request (Tested) 
   app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
     try {
       const user = await getUser(req);
@@ -185,17 +189,19 @@ module.exports = function (app) {
       const user = await getUser(req);
       if (user.isAdmin) {
         const stationid = req.params.stationId;
-        const station = await db("se_project.stations").where("id", stationid).first();
-        // console.log(station.stationposition);
+        console.log("station id :" + stationid)
+        const station = await db("se_project.stations").select("*").where("id", stationid);
+        console.log("yess");
         if (!station) {
           return res.status(400).send("station not found");
         }
         if (station.stationtype == "normal" && station.stationposition == "start") {
           //normal & start         
-          const route = await db("se_project.routes").where("fromstationid", stationid).first();
-          // console.log(route);
+          const route = await db("se_project.routes").where("fromStationid", stationid).first();
+          console.log("weeeee" +route.fromStationid);
+          
           let newrouteid = route.fromstationid;
-          let nextroute = route.tostationid;
+          let nextroute = route.toStationid;
           await db("se_project.stations").where("id", newrouteid).del();
           await db("se_project.stations").where("id", nextroute).update({ stationposition: "start" });
           nextroute.stationposition = "start";
@@ -204,25 +210,25 @@ module.exports = function (app) {
         }
         else if (station.stationtype == "normal" && station.stationposition == "end") {
           //normal & end
-          const nextStationend = await db("se_project.stations").where("tostationid", stationid);
+          const nextStationend = await db("se_project.stations").where("toStationid", stationid);
 
           //fl end bnbd2 bl to w nnhi bl from, w not affect route brdo 
-          let newroute = nextStationend.tostationid;
-          let prevroute = nextStationend.fromstationid;
+          let newroute = nextStationend.toStationid;
+          let prevroute = nextStationend.fromStationid;
           await db("se_project.stations").where("id", newroute).del();
           await db("se_project.stations").where("id", prevroute).update({ stationposition: "end" });
           return res.status(200).send("Station deleted successfully");
 
         } else if (station.stationtype == "normal" && station.stationposition == ("middle")) {
           //normal & middle
-          const route = await db("se_project.routes").where("fromstationid", stationid);
+          const route = await db("se_project.routes").where("fromStationid", stationid);
           // console.log(route);
-          let oldroute = route[0].tostationid;
+          let oldroute = route[0].toStationid;
           let newroute = route[1].tostationid;
           const newrouteforward = {
             routename: "hi" + oldroute + "" + newroute,
-            fromstationid: oldroute,
-            tostationid: newroute,
+            fromStationid: oldroute,
+            toStationid: newroute,
           };
           let forward = await db("se_project.routes").insert(newrouteforward).returning("*");
           forward = forward[0];
@@ -230,8 +236,8 @@ module.exports = function (app) {
 
           const newroutebackward = {
             routename: "hi" + newroute + "" + oldroute,
-            fromstationid: newroute,
-            tostationid: oldroute,
+            fromStationid: newroute,
+            toStationid: oldroute,
           };
           let backward = await db("se_project.routes").insert(newroutebackward).returning("*");
           backward = backward[0];
@@ -267,7 +273,7 @@ module.exports = function (app) {
           const mystation = await db("se_project.stations").where("id", stationid).first();
           // console.log(mystation);
 
-          const routes = await db("se_project.routes").where("fromstationid", mystation.id);
+          const routes = await db("se_project.routes").where("fromStationid", mystation.id);
           // console.log(routes);
 
           const toStationIds = []; // Array to store the tostationid values
@@ -275,7 +281,7 @@ module.exports = function (app) {
 
           for (const route of routes) {
             // Get the tostationid value for the current route
-            const toStationId = route.tostationid;
+            const toStationId = route.toStationid;
             // console.log(toStationId);
 
             if (toStationId !== null) {
@@ -288,14 +294,13 @@ module.exports = function (app) {
           // console.log(amount);
           for (const toStationId of toStationIds) {
             const prevroute = mystation.id; // Use the 'id' property of mystation
-
             // Create new object here using toStationId and the amount
             // Example:
             for (let i = 0; i < amount; i++) {
               const newObj = {
                 routename: "hi" + prevroute + "" + toStationId,
-                fromstationid: prevroute,
-                tostationid: toStationId,
+                fromStationid: prevroute,
+                toStationid: toStationId,
               };
               await db("se_project.routes").insert(newObj);
             }
@@ -321,9 +326,9 @@ module.exports = function (app) {
         // console.log(routeId);
         const routeToDelete = await db("se_project.routes").where("id", routeId).first();
         // console.log(routeToDelete.id);
-        let from = routeToDelete.fromstationid;
+        let from = routeToDelete.fromStationid;
         // console.log(from);
-        let to = routeToDelete.tostationid;
+        let to = routeToDelete.toStationid;
         // console.log(to);
         if (!routeToDelete) {
           return res.status(404).send("Route not found");
@@ -377,22 +382,22 @@ module.exports = function (app) {
       const existingSeniorRequest = await db("se_project.senior_requests")
         .where("userid", user.id)
         .first();
-        
+
       if (existingSeniorRequest && existingSeniorRequest.status === "pending") {
         console.log("hi");
         return res.status(400).send("You already have a pending request");
       }
-      
+
       if (user.isSenior) {
         return res.status(400).send("You are already a senior");
       }
-      
+
       const seniorRequest = {
         nationalid: nationalid,
         status: "pending",
         userid: user.id
       };
-      
+
       await db("se_project.senior_requests").insert(seniorRequest);
       return res.status(200).send(seniorRequest.status);
     } catch (error) {
@@ -400,28 +405,28 @@ module.exports = function (app) {
       return res.status(400).send("Could not add nationalId");
     }
   });
-  
+
 
   //update station(admin) done
   app.put("/api/v1/station/:stationId", async function (req, res) {
     try {
-      const user = await getUser(req);
-      const useridd = user.userid
-      if (user.isAdmin) {
-        // const {stationname} = req.body;
-        //const {stationid} = req.params;
-        await db("se_project.stations")
-          .where({ id: req.params.stationId })
-          .update({ stationname: req.body.stationname, id: req.params.stationId });
-        return res.status(200).send("stationId is updated successfully");
-      } else {
-        return res.status(400).send("you are not an admin");
-      }
+        const user = await getUser(req);
+        const useridd = user.userid;
+        if (user.isAdmin) {
+            await db("se_project.stations")
+                .where("id", req.params.stationId)
+                .update("stationname", req.body.stationname);
+            return res.status(200).send("Station Name is updated successfully");
+        } else {
+            return res.status(400).send("You are not an admin");
+        }
     } catch (e) {
-      console.log(e.message);
-      return res.status(400).send("can not update stationId");
+        console.log(e.message);
+        return res.status(400).send("Cannot update Station Name");
     }
-  });
+});
+
+  
   //update route(admin) done
   app.put("/api/v1/route/:routeId", async function (req, res) {
     try {
@@ -512,21 +517,19 @@ module.exports = function (app) {
     const user = await getUser(req);
     if (user.isAdmin) {
       try {
-        const stationname = req.body;
+        const { stationname } = req.body; // Destructure the stationname from the request body
         const userid = user.userid;
-        await db("se_project.stations").where("id", userid).insert({ "stationname": stationname, "stationtype": "normal", "stationstatus": "new" });
-        return res.status(200).send("Station Created!");
-      }
-      catch (e) {
+        await db("se_project.stations").where("id", userid).insert({ stationname, "stationtype": "normal", "stationstatus": "new" });
+        return res.status(200).send(stationname); // Send only the stationname as the response
+      } catch (e) {
         console.log(e.message);
         return res.status(400).send("Could not create station");
       }
-    }
-    else {
+    } else {
       return res.status(400).send("You can't create station");
-
-    }
+    }     
   });
+  
 
 
   //ADMIN creates a route 
@@ -601,22 +604,75 @@ module.exports = function (app) {
   app.post("/api/v1/payment/ticket", async function (req, res) {
     try {
       const user = await getUser(req);
-      const useridsubscription = await db.select("userid").from("se_project.subsription");
-      if (useridsubscription != user.id) {
-        const { purchasediid, creditcardnumber, holdername, payedamount, origin, destination, tripdate } = req.body;
-        const transaction = { amount: payedamount, userid: user.id, purchasediid: purchasediid };
-        const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
-        //insert ticket into upcoming ride 
-        //const ticketinsert = await db("se_project.rides").insert(tripdate).returning("id","tripdate");
-        return res.status(200).json({ transactionid });
-      } else {
-        return res.status(200).send("user has a subscription");
+      const { creditcardnumber, holdername, payedamount, origin, destination, tripDate } = req.body;
+  
+      // Check if payedamount is not null or empty
+      if (!payedamount) {
+        return res.status(400).send("Payed Amount is required.");
       }
+  
+      const ticket = { origin: origin, destination: destination, tripdate: tripDate, userid: user.id };
+      const [ticketid] = await db("se_project.tickets").insert(ticket).returning("*");
+      const ticid = ticketid.id;
+      console.log(ticid);
+      const transaction = { amount: payedamount, userid: user.id, purchasediid: ticid };
+      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
+  
+      return res.status(200).json({ transactionid });
     } catch (e) {
       console.log(e.message);
-      return res.status(400).send("Could not subscribe");
+      return res.status(400).send("Could not Purchase Ticket");
     }
   });
-  //this is farida's code
+  
+  
 
+
+  // app.post("/api/v1/payment/subscription", async function (req, res) {
+  //   try{
+  //       const user = await getUser(req);
+  //       const {creditcardnumber, holdername, payedamount, subtype, zoneid} = req.body;
+
+  //       const subscription = {subtype: subtype, zoneid: zoneid, userid: user.id, nooftickets: numOftickets};
+  //       console.log(subscription);
+  //       console.log("bekh");
+  //       const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("*");
+  //       const subid = subscriptionid.id;
+  //       console.log(subid)
+  //       const transaction = {amount: payedamount, userid: user.id, purchasediid: subid};
+  //       const [transactionid] = await db("se_project.transactions").insert(transaction).returning("*");
+
+
+  //       return res.status(200).json({transactionid, subscriptionid});
+  //   }catch(e){
+  //       console.log(e.message);
+  //       return res.status(400).send("Could not subscribe");
+  //   }
+  // });
+  //this is farida's code
+//start of eyad's code
+//table viewing routes
+app.get("/api/v1/routes", async function(req, res){
+  const getroutes = await db("se_project.routes").select("*");
+  return res.status(200).json(getroutes);
+});
+
+//view pending refund requests
+app.get("/api/v1/refunds", async function(req,res){
+  const getrefund = await db("se_project.refunds").select("*");
+  return res.status(200).json(getrefund);
+});
+
+//view pending senior requests
+app.get("/api/v1/seniorrequests", async function(req,res){
+  const getsnior = await db("se_project.senior_requests").select("*");
+  return res.status(200).json(getsnior);
+});
+
+//view all zones
+app.get("/api/v1/zones", async function(req,res) {
+const allzones = await db("se_project.zones").select("*")
+return res.status(200).json(allzones);
+});
+//this is eyads code(mn wp) 
 };

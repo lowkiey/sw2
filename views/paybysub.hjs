@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel='stylesheet' href='/styles/bootstrap.min.css' />
+    <link rel='stylesheet' href='/styles/style.css' />
+    <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <script>
+        $(document).ready(function () {
+            $('.pay-button').click(function () {
+                const subid = $('#subid').val();
+                const origin = $('#origin').val();
+                const destination = $('#destination').val();
+                const tripdate = $('#tripdate').val();
+                $.ajax({
+                    type: "POST",
+                    url: '/api/v1/tickets/purchase/subscription',
+                    data: {
+                        subid: subid,
+                        origin: origin,
+                        destination: destination,
+                        tripdate: tripdate
+                    },
+                    success: function (serverResponse) {
+                        if (serverResponse) {
+                            alert('Payment accepted');
+                        }
+                    },
+                    error: function (errorResponse) {
+                        if (errorResponse) {
+                            alert('Error: ' + errorResponse.responseText);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <h1>Payment Form</h1>
+    <form>
+        <label for="subid">Subscription ID:</label>
+        <input type="text" id="subid" required><br><br>
+
+        <label for="origin">Origin:</label>
+        <input type="text" id="origin" required><br><br>
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" required><br><br>
+        
+        <label for="tripdate">Trip Date:</label>
+        <input type="text" id="tripdate" required><br><br>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger pay-button">Pay</button>
+        </div>
+    </form>
+</body>
+
+</html>

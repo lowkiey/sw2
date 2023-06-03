@@ -37,9 +37,10 @@
             <div class="collapse navbar-collapse" id="myNavbar">
               <ul class="nav navbar-nav">
                 <li><a href="/stations_example">Station</a></li>
-                <li><a href="/users">Users</a></li>
+                <li class = "opened-link"><a href="/users">Users</a></li>
                 <li><a href="/subscriptions">Subscriptions</a></li>
                 <li><a href="/tickets">Tickets</a></li>
+                <li><a href="/routes">Routes</a></li>
               </ul>
               <ul class="nav navbar-nav navbar-right">
                 <li><a href="javascript:void(0)"

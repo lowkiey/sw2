@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel='stylesheet' href='/styles/bootstrap.min.css' />
+    <link rel='stylesheet' href='/styles/style.css' />
+    <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <script>
+        $(document).ready(function () {
+            $('.pay-button').click(function () {
+                const creditcardnumber = $('#creditcardnumber').val();
+                const holderName = $('#holderName').val();
+                const payedamount = $('#payedamount').val();
+                const origin = $('#origin').val();
+                const destination = $('#destination').val();
+                const tripDate = $('#tripDate').val();
+                $.ajax({
+                    type: "POST",
+                    url: '/api/v1/payment/ticket',
+                    data: {
+                        creditcardnumber: creditcardnumber,
+                        holderName: holderName,
+                        payedamount: payedamount,
+                        origin: origin,
+                        destination: destination,
+                        tripDate: tripDate
+                    },
+                    success: function (serverResponse) {
+                        if (serverResponse) {
+                            alert('Payment accepted');
+                        }
+                    },
+                    error: function (errorResponse) {
+                        if (errorResponse) {
+                            alert('Error: ' + errorResponse.responseText);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <h1>Payment Form</h1>
+    <form>
+        <label for="creditcardnumber">Credit Card Number:</label>
+        <input type="text" id="creditcardnumber" required><br><br>
+
+        <label for="holderName">Card Holder Name:</label>
+        <input type="text" id="holderName" required><br><br>
+
+        <label for="payedamount">Amount:</label>
+        <input type="number" id="payedamount" required><br><br>
+
+        <label for="origin">Origin:</label>
+        <input type="text" id="origin" required><br><br>
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" required><br><br>
+
+        <label for="tripDate">Trip Date:</label>
+        <input type="text" id="tripDate" required><br><br>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger pay-button">Pay</button>
+        </div>
+    </form>
+</body>
+
+</html>

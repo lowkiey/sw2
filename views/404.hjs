@@ -25,7 +25,6 @@
     }
   </script>
   <div>
-    <div>
       <nav class="navbar navbar-inverse" style="padding-left:130px;">
         <div class="container-fluid">
           <div class="navbar-header">
@@ -39,9 +38,13 @@
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
               <li><a href="/stations_example">Station</a></li>
+               {{#isAdmin}}
               <li><a href="/users">Users</a></li>
+               {{/isAdmin}}
               <li><a href="/subscriptions">Subscriptions</a></li>
               <li><a href="/tickets">Tickets</a></li>
+              <li><a href="/routes">Routes</a></li>
+
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li><a href="javascript:void(0)"

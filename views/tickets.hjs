@@ -52,6 +52,8 @@
         });
       });
     });
+
+
   </script>
 
   <script>
@@ -79,10 +81,14 @@
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-              <li><a href="/stations_example">Station</a></li>
+               <li><a href="/stations_example">Station</a></li>
+               {{#isAdmin}}
               <li><a href="/users">Users</a></li>
+              {{/isAdmin}}
               <li><a href="/subscriptions">Subscriptions</a></li>
-              <li><a href="/tickets">Tickets</a></li>
+              <li class = "opened-link"><a href="/tickets">Tickets</a></li>
+              <li><a href="/routes">Routes</a></li>
+
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li><a href="javascript:void(0)"
@@ -117,6 +123,7 @@
         <td>{{subiD}}</td>
         <td>{{tripdate}}</td>
         <td>
+          <button class="btn btn-danger purchase-button" data-ticket-id="{{id}}" onclick= "openCenteredWindow('/paymentMethod', 'Senior Request', 450, 400)">Purchase</button>
           <button class="btn btn-danger refund-button" data-ticket-id="{{id}}">Refund</button>
         </td>
       </tr>
