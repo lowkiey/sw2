@@ -161,9 +161,6 @@ module.exports = function (app) {
     }
   });
 
-  
-};
-
 //check price:
 
 //Accept/Reject Senior
@@ -178,6 +175,8 @@ app.put("/api/v1/requests/senior/:requestId",async function(req,res){
       user.isSenior;
       seniorstatus = "accepted";
       await db("se_project.senior_requests").where("id" , userid).update({status : "accepted"});
+      const amountt = await db("se_project.transactions").select("amount")
+      const discount = amountt - 0.5;
       return res.status(200).send("senior request is accepted");
     }
   }else if(seniorstatus == "rejected"){
@@ -190,3 +189,47 @@ app.put("/api/v1/requests/senior/:requestId",async function(req,res){
     return res.status(400).send("rejected operation");
   }
   });
+
+  //Update Zone Price 
+app.put("/api/v1/zones/:zoneId", async function(req,res){
+  try{
+    const user = await getUser(req);
+    if(user.isAdmin){
+    const {zoneid} = req.params;
+    const {price}=req.body;
+    const updatedprice = await db("se_project.zones").where("id", zoneid).update({price});
+    return res.status(200).send(updatedprice, "updated");
+    }else{
+      return res.status(400).send("You are not authorized to update zone price");
+    }
+  } catch(e){
+    console.log(e.message);
+    return res.status(400).send("failed to update");
+} 
+
+});
+};
+
+//table viewing routes
+app.get("/api/v1/routes", async function(req, res){
+  const getroutes = await db("se_project.routes").select("*");
+  return res.status(200).json(getroutes);
+});
+
+//view pending refund requests
+app.get("/api/v1/refunds", async function(req,res){
+  const getrefund = await db("se_project.refunds").select("*");
+  return res.status(200).json(getrefund);
+});
+
+//view pending senior requests
+app.get("/api/v1/seniorrequests", async function(req,res){
+  const getsnior = await db("se_project.senior_requests").select("*");
+  return res.status(200).json(getsnior);
+});
+
+//view all zones
+app.get("/api/v1/zones", async function(req,res) {
+const allzones = await db("se_project.zones").select("*")
+return res.status(200).json(allzones);
+});
