@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS se_project.senior_requests
     id SERIAL NOT NULL,
     status text NOT NULL,
     userid Integer NOT NULL, 
-    nationalid INTEGER not null,
+    nationalid Integer not null,
     FOREIGN KEY( userid ) REFERENCES se_project.users,
     CONSTRAINT senior_requests_pkey PRIMARY KEY (id)
 );
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS se_project.stations
     stationtype text NOT NULL, -- normal or transfer
     stationposition text, -- start middle end
     stationstatus text not null, -- new created or not
-    CONSTRAINT stations_pkey PRIMARY KEY (id)
+    CONSTRAINT stations_pkey PRIMARY KEY (id) 
 );
 CREATE TABLE IF NOT EXISTS se_project.routes
 (

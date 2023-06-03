@@ -17,6 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));  //btsm7 en a pass array 
 
 // All public routes can be accessible without authentication
+//endpoints ll frontend w kolgoum type get
 publicViewRoutes(app);
 publicApiRoutes(app);// uncomment
 
