@@ -212,24 +212,61 @@ app.put("/api/v1/zones/:zoneId", async function(req,res){
 
 //table viewing routes
 app.get("/api/v1/routes", async function(req, res){
+  try{
   const getroutes = await db("se_project.routes").select("*");
   return res.status(200).json(getroutes);
+  }catch(e){
+    console.log(e.message);
+    return res.status(400).send("Could not get routes");
+  }
 });
 
 //view pending refund requests
 app.get("/api/v1/refunds", async function(req,res){
+  try{
   const getrefund = await db("se_project.refunds").select("*");
   return res.status(200).json(getrefund);
+  }catch(e){
+    console.log(e.message);
+    return res.status(400).send("Could not get refund requests");
+  }
 });
 
 //view pending senior requests
 app.get("/api/v1/seniorrequests", async function(req,res){
+  try{
   const getsnior = await db("se_project.senior_requests").select("*");
   return res.status(200).json(getsnior);
+  }catch(e){
+    console.log(e.message);
+    return res.status(400).send("Could not get senior requests");
+  }
 });
 
 //view all zones
 app.get("/api/v1/zones", async function(req,res) {
+  try{
 const allzones = await db("se_project.zones").select("*")
 return res.status(200).json(allzones);
+}catch(e){
+  console.log(e.message);
+  return res.status(400).send("Could not get zones");
+}
 });
+
+//refubd ticket 
+// app.post("/api/v1/refund/:ticketId", async function(req,res){
+//   try{
+// const ticket = await db("se_project.ticket").select("userid").where(userid => user)
+
+
+
+
+
+
+//   }catch(e){
+//     console.log(e.message);
+//     return res.status(400).send("Could not get ticket");
+//   }
+
+// });
