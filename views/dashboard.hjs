@@ -24,6 +24,16 @@
         location.href = '/';
       }
     });
+
+    function openCenteredWindow(url, title, width, height) {
+      const screenWidth = window.screen.width;
+      const screenHeight = window.screen.height;
+
+      const left = (screenWidth / 2) - (width / 2);
+      const top = (screenHeight / 2) - (height / 2);
+
+      window.open(url, title, `width=${width},height=${height},left=${left},top=${top}`);
+    }
   </script>
   <div>
     <div>
@@ -41,30 +51,45 @@
             <ul class="nav navbar-nav">
               <li><a href="/stations_example">Station</a></li>
               <li><a href="/users">Users</a></li>
-              <li><a href="/users/add">Add Users</a></li>
+              <li><a href="/subscriptions">Subscriptions</a></li>
+              <li><a href="/tickets">Tickets</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
+              {{#isAdmin}}
+              <li><a href="/dashboardAdmin" onclick="checkAdminAccess(event)">Admin Access</a></li>
+              {{/isAdmin}}
               <li><a href="javascript:void(0)"
                   onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset Password</a></li>
-
-              <script>
-                function openCenteredWindow(url, title, width, height) {
-                  const screenWidth = window.screen.width;
-                  const screenHeight = window.screen.height;
-
-                  const left = (screenWidth / 2) - (width / 2);
-                  const top = (screenHeight / 2) - (height / 2);
-
-                  window.open(url, title, `width=${width},height=${height},left=${left},top=${top}`);
-                }
-              </script>
               <li><a href="/">Logout</a></li>
             </ul>
+          </div>
+        </div>
       </nav>
     </div>
   </div>
   <h2>Welcome {{firstname}}, you are logged in!</h2>
+  <div class="image_price-container">
+    <img src="/images/CheckPrice.jpg" alt="Image" class="image_price">
   </div>
-</body>
+  <button type="button" class="button_price" onclick="openCenteredWindow('/prices', 'Check Price', 650, 600)">Check
+    Price for Ride</button>
+
+  <div class="image_senior-container">
+    <img src="/images/Senior.jpg" alt="Image" class="image_senior">
+  </div>
+  <button type="button" class="button_senior" onclick="openCenteredWindow('/senior', 'Senior Request', 450, 400)">Are
+    you a Senior?</button>
+
+    {{!-- <div class="image_rides-container">
+    <img src="/images/ridejpg.jpg" alt="Image" class="image_rides"> --}}
+  </div>
+  <button type="button" class="button_rides" onclick="openCenteredWindow('/rides', 'rides', 450, 400)">check your rides</button>
+
+  {{!-- <div class="image_ticket_container">
+    <img src="/images/.jpg" alt="Image" class="image_ticket">
+  </div>
+  <button type="button" class="button_ticket" onclick="openCenteredWindow('/tickets', 'Purchase Ticket', 650, 600)">Purchase
+    Ticket</button>
+</body> --}}
 
 </html>

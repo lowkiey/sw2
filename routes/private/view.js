@@ -48,4 +48,9 @@ module.exports = function(app) {
       const subscriptions = await db.select('*').from('se_project.subsription');
       return res.render('subscriptions');
   });
-};
+
+  app.get('/rides', async function(req, res) {
+const rides = await db.select('*').from('se_project.rides');
+return res.render('rides' , {rides});
+  });  
+}
