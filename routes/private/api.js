@@ -381,17 +381,19 @@ module.exports = function (app) {
       const user = await getUser(req);
       if (user.isAdmin) {
         const stationid = req.params.stationId;
-        const station = await db("se_project.stations").where("id", stationid).first();
-        // console.log(station.stationposition);
+        console.log("station id :" + stationid)
+        const station = await db("se_project.stations").select("*").where("id", stationid);
+        console.log("yess");
         if (!station) {
           return res.status(400).send("station not found");
         }
         if (station.stationtype == "normal" && station.stationposition == "start") {
           //normal & start         
-          const route = await db("se_project.routes").where("fromstationid", stationid).first();
-          // console.log(route);
+          const route = await db("se_project.routes").where("fromStationid", stationid).first();
+          console.log("weeeee" +route.fromStationid);
+          
           let newrouteid = route.fromstationid;
-          let nextroute = route.tostationid;
+          let nextroute = route.toStationid;
           await db("se_project.stations").where("id", newrouteid).del();
           await db("se_project.stations").where("id", nextroute).update({ stationposition: "start" });
           nextroute.stationposition = "start";
@@ -400,25 +402,25 @@ module.exports = function (app) {
         }
         else if (station.stationtype == "normal" && station.stationposition == "end") {
           //normal & end
-          const nextStationend = await db("se_project.stations").where("tostationid", stationid);
+          const nextStationend = await db("se_project.stations").where("toStationid", stationid);
 
           //fl end bnbd2 bl to w nnhi bl from, w not affect route brdo 
-          let newroute = nextStationend.tostationid;
-          let prevroute = nextStationend.fromstationid;
+          let newroute = nextStationend.toStationid;
+          let prevroute = nextStationend.fromStationid;
           await db("se_project.stations").where("id", newroute).del();
           await db("se_project.stations").where("id", prevroute).update({ stationposition: "end" });
           return res.status(200).send("Station deleted successfully");
 
         } else if (station.stationtype == "normal" && station.stationposition == ("middle")) {
           //normal & middle
-          const route = await db("se_project.routes").where("fromstationid", stationid);
+          const route = await db("se_project.routes").where("fromStationid", stationid);
           // console.log(route);
-          let oldroute = route[0].tostationid;
+          let oldroute = route[0].toStationid;
           let newroute = route[1].tostationid;
           const newrouteforward = {
             routename: "hi" + oldroute + "" + newroute,
-            fromstationid: oldroute,
-            tostationid: newroute,
+            fromStationid: oldroute,
+            toStationid: newroute,
           };
           let forward = await db("se_project.routes").insert(newrouteforward).returning("*");
           forward = forward[0];
@@ -426,8 +428,8 @@ module.exports = function (app) {
 
           const newroutebackward = {
             routename: "hi" + newroute + "" + oldroute,
-            fromstationid: newroute,
-            tostationid: oldroute,
+            fromStationid: newroute,
+            toStationid: oldroute,
           };
           let backward = await db("se_project.routes").insert(newroutebackward).returning("*");
           backward = backward[0];
@@ -461,27 +463,27 @@ module.exports = function (app) {
         } else if (station.stationtype == "transfer") {
           // Transfer
           const mystation = await db("se_project.stations").where("id", stationid).first();
-          console.log(mystation);
+          // console.log(mystation);
 
-          const routes = await db("se_project.routes").where("fromstationid", mystation.id);
-          console.log(routes);
+          const routes = await db("se_project.routes").where("fromStationid", mystation.id);
+          // console.log(routes);
 
           const toStationIds = []; // Array to store the tostationid values
 
 
           for (const route of routes) {
             // Get the tostationid value for the current route
-            const toStationId = route.tostationid;
-            console.log(toStationId);
+            const toStationId = route.toStationid;
+            // console.log(toStationId);
 
             if (toStationId !== null) {
               toStationIds.push(toStationId); // Add the tostationid to the array
             }
           }
-          console.log(toStationIds); // Log all the tostationid values
+          // console.log(toStationIds); // Log all the tostationid values
 
           const amount = toStationIds.length;
-          console.log(amount);
+          // console.log(amount);
           for (const toStationId of toStationIds) {
             const prevroute = mystation.id; // Use the 'id' property of mystation
 
@@ -490,18 +492,31 @@ module.exports = function (app) {
             for (let i = 0; i < amount; i++) {
               const newObj = {
                 routename: "hi" + prevroute + "" + toStationId,
-                fromstationid: prevroute,
-                tostationid: toStationId,
+                fromStationid: prevroute,
+                toStationid: toStationId,
               };
               await db("se_project.routes").insert(newObj);
             }
           }
         }
+        //   const prevStation = await db("se_project.stations").where("stationposition", "end").first();
+        //   const nextStations = await db("se_project.routes")
+        //     .where("fromstationid", stationid)
+        //     .pluck("tostationid");
+
+        //   for (const nextStationId of nextStations) {
+        //     const newObj = {
+        //       routename: "route_" + prevStation.id + "_" + nextStationId,
+        //       fromstationid: prevStation.id,
+        //       tostationid: nextStationId,
+        //     };
+
+        //     await db("se_project.routes").insert(newObj);
+        //   }
+        // }
 
         const deletingStation = await db("se_project.stations").where("id", stationid).del();
         return res.status(200).send("Station deleted successfully");
-
-
       } else {
         return res.status(400).send("Unauthorised access")
       }
@@ -579,107 +594,108 @@ module.exports = function (app) {
     }
   });
 
-  //update station(admin) done
-  app.put("/api/v1/station/:stationId", async function (req, res) {
-    try {
-      const user = await getUser(req);
-      const useridd = user.userid
-      if (user.isAdmin) {
-        // const {stationname} = req.body;
-        //const {stationid} = req.params;
-        await db("se_project.stations")
-          .where({ id: req.params.stationId })
-          .update({ stationname: req.body.stationname, id: req.params.stationId });
-        return res.status(200).send("stationId is updated successfully");
-      } else {
-        return res.status(400).send("you are not an admin");
-      }
-    } catch (e) {
-      console.log(e.message);
-      return res.status(400).send("can not update stationId");
-    }
-  });
-  //update route(admin) done
-  app.put("/api/v1/route/:routeId", async function (req, res) {
-    try {
-      const price = 0;
+//update station(admin) done
+app.put("/api/v1/station/:stationId", async function (req, res) {
+  try {
       const user = await getUser(req);
       const useridd = user.userid;
       if (user.isAdmin) {
-        //onst {routeid} = req.params;
-        await db("se_project.routes")
-          .where({ id: req.params.routeId })
-          .update({ routename: req.body.routename, id: req.params.routeId });
-        return res.status(200).send("routeid is updated successfully");
+          await db("se_project.stations")
+              .where("id", req.params.stationId)
+              .update("stationname", req.body.stationname);
+          return res.status(200).send("Station Name is updated successfully");
+      } else {
+          return res.status(400).send("You are not an admin");
       }
-      else {
-        return res.status(400).send("you are not an admin");
-      }
-    }
-    catch (e) {
+  } catch (e) {
       console.log(e.message);
-      return res.status(400).send("can not update routeid");
-    }
-  });
-
-
-
-
-  //check price
-  app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
-    // const { originId, destinationId } = req.params;
-    // const route = await db.select('*').from('se_project.routes').where('fromstationid', originId).andWhere('tostationid', destinationId);
-    // console.log(route);
-    // res.status(200).json(route);
-    //});
-    // try {
-    let { originId, destinationId } = req.params;
-    let stationsCount = 1;
-    let destinationReached = false;
-    let visitedStationsSet = new Set();
-    visitedStationsSet.add(originId);
-    //ghalat
-
-    while (true) {
-      const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', originId);
-      stationsCount++;
-      let furthestStationId = 0;
-
-      for (let i = 0; i < toStationidsObjects.length; i++) {
-        let toStationId = toStationidsObjects[i].tostationid;
-        if (visitedStationsSet.has(toStationId)) {
-          continue;
-        } else {
-          visitedStationsSet.add(toStationId);
-        }
-        if (toStationId == destinationId) {
-          destinationReached = true;
-          break;
-        }
-        if (toStationId < destinationId && toStationId > furthestStationId) {
-          furthestStationId = toStationId;
-        }
-      }
-
-      if (destinationReached) {
-        break;
-      }
-      originId = furthestStationId;
-    }
-    if (stationsCount <= 9) {
-      price = 5;
-    }
-    else if (stationsCount >= 10 & stationsCount <= 16) {
-      price = 7;
+      return res.status(400).send("Cannot update Station Name");
+  }
+});
+//update route(admin) done
+app.put("/api/v1/route/:routeId", async function (req, res) {
+  try {
+    const price = 0;
+    const user = await getUser(req);
+    const useridd = user.userid;
+    if (user.isAdmin) {
+      //onst {routeid} = req.params;
+      await db("se_project.routes")
+        .where({ id: req.params.routeId })
+        .update({ routename: req.body.routename, id: req.params.routeId });
+      return res.status(200).send("routeid is updated successfully");
     }
     else {
-      price = 10;
+      return res.status(400).send("you are not an admin");
     }
-    // res.status(200).send("price of ticket equal:", price);
-    res.status(200).json({ stationsCount: stationsCount, price: price });
+  }
+  catch (e) {
+    console.log(e.message);
+    return res.status(400).send("can not update routeid");
+  }
+});
 
 
-  });
+
+//check price
+app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
+  // const { originId, destinationId } = req.params;
+  // const route = await db.select('*').from('se_project.routes').where('fromstationid', originId).andWhere('tostationid', destinationId);
+  // console.log(route);
+  // res.status(200).json(route);
+  //});
+  try {
+  let { originId, destinationId } = req.params;
+  let destinationDistance = {};
+  let destinationReached = false;
+  let visitedStationsSet = new Set();
+  let queue = [originId];
+
+  visitedStationsSet.add(Number(originId));
+  destinationDistance[originId] = 1;
+  //ghalat
+
+  while (queue.length > 0) {
+    let currentStation = queue.shift();
+    console.log("currentStation: " + currentStation);
+    if (currentStation == destinationId) {
+      destinationReached = true;
+      break;
+    }
+    const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', currentStation);
+    console.log(toStationidsObjects);
+    for (let i = 0; i < toStationidsObjects.length; i++) {
+      let toStationId = toStationidsObjects[i].tostationid;
+      console.log("toStationId: " + toStationId);
+      if (visitedStationsSet.has(toStationId)) {
+        console.log("already visited: " + toStationId);
+        continue;
+      }
+      visitedStationsSet.add(toStationId);
+      destinationDistance[toStationId] = destinationDistance[currentStation] + 1;
+      queue.push(toStationId);
+    }
+  }
+
+
+  const stationsCount = destinationDistance[destinationId];
+  if (stationsCount <= 9) {
+    price = 5;
+  }
+  else if (stationsCount >= 10 & stationsCount <= 16) {
+    price = 7;
+  }
+  else {
+    price = 10;
+  }
+  // res.status(200).send("price of ticket equal:", price);
+  res.status(200).json({stationsCount: stationsCount, price: price});
+}
+catch(e){
+  console.log(e.message);
+  res.status(400).send("wrong entry");
+}
+});
 
   //end of farah's code
   //startof farida's code
@@ -702,8 +718,8 @@ module.exports = function (app) {
     else {
       return res.status(400).send("You can't create station");
 
-    }
-  });
+  }
+});
 
 
   //ADMIN creates a route 
@@ -782,9 +798,9 @@ module.exports = function (app) {
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not subscribe");
-    }
-  });
-  //this is farida's code
+  }
+});
+//this is farida's code
 
 //this is eyads code
 //Accept/Reject Senior
@@ -895,4 +911,3 @@ return res.status(200).json(allzones);
 
 // });
 };
-//end of eyad's code

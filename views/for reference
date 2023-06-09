@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel='stylesheet' href='/styles/bootstrap.min.css' />
+  <link rel='stylesheet' href='/styles/style.css' />
+  <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
+  <script src="/js/bootstrap.min.js" type="text/javascript"></script>
+</head>
+<body>
+  <h3>Fill the fields to get your trip price</h3>
+  <div class="container">
+    <br />
+    <br />
+    <form class="form-horizontal">
+      <div class="form-group">
+        <label for="originDropdown" class="col-sm-2 control-label">Origin</label>
+        <div class="col-sm-10">
+          <select id="originDropdown" class="form-control">
+            <!-- Options will be dynamically populated using JavaScript -->
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="destinationDropdown" class="col-sm-2 control-label">Destination</label>
+        <div class="col-sm-10">
+          <select id="destinationDropdown" class="form-control">
+            <!-- Options will be dynamically populated using JavaScript -->
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="datePicker" class="col-sm-2 control-label">Date</label>
+        <div class="col-sm-10">
+          <input type="date" id="datePicker" class="form-control">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button id="submit" type="button" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      // Function to fetch stations and populate dropdowns
+      function fetchStations() {
+        $.ajax({
+          type: "GET",
+          url: "/api/v1/rides",
+          success: function (data) {
+            if (data) {
+              data.sort((a, b) => a.id - b.id);
+              // Populate origin dropdown
+              const originDropdown = $("#originDropdown");
+              originDropdown.empty();
+              data.forEach(rides => {
+                originDropdown.append(`<option value="${rides.origin}"></option>`);
+              });
+
+              // Populate destination dropdown
+              const destinationDropdown = $("#destinationDropdown");
+              destinationDropdown.empty();
+              data.forEach(rides => {
+                destinationDropdown.append(`<option value="${rides.destination}"></option>`);
+              });
+            }
+          },
+          error: function (err) {
+            console.log("error message", err.responseText);
+          }
+        });
+      }
+
+      // Fetch stations on page load
+      fetchStations();
+
+      $("#submit").click(function () {
+        const originCode = $("#originDropdown").val();
+        const destinationCode = $("#destinationDropdown").val();
+        const selectedDate = $("#datePicker").val(); // retrieve selected date
+
+        if (originCode && destinationCode && selectedDate) { // check if all fields are filled
+          $.ajax({
+            type: "GET",
+            url: `/api/v1/tickets/price/${originCode}&${destinationCode}&${selectedDate}`, // append date to URL
+            success: function (data) {
+              if (data) {
+                $("#priceLabel").text(`Ticket price: ${data} EGP`);
+              }
+            },
+            error: function (err) {
+              console.log("error message", err.responseText);
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

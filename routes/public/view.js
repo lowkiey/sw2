@@ -15,19 +15,5 @@ module.exports = function (app) {
       const users = await db.select('*').from('se_project.users');
       return res.render('user', { users });
     });
-    app.get('/tickets', async function (req, res) {
-      const tickets = await db.select('*').from('se_project.tickets');
-      return res.render('tickets', {tickets});
-    });
-    app.get('/subscriptions', async function(req, res) {
-      const subscriptions = await db.select('*').from('se_project.subsription');
-      return res.render('Subscriptions', {subscriptions});
-
-    });
-    app.get('/zones', async function(req, res) {
-      const zones = await db.select('*').from('se_project.zones');
-      return res.render('zones', {zones});
-
-    });
-    
-    };
+  
+};
