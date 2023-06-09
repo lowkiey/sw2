@@ -42,6 +42,29 @@ module.exports = function(app) {
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
-
+  app.get('/stations_example', async function(req, res) {
+    const user = await getUser(req);
+    const stations = await db.select('*').from('se_project.stations');
+    return res.render('stations_example', { ...user, stations });
+  });
+    app.get('/addStation', async function(req, res) { 
+      const station = await db.select('*').from('se_project.stations');
+      return res.render('addStation', { station });
+  });
+  app.get('/updateStation', async function(req, res) { 
+    const station = await db.select('*').from('se_project.stations');
+    return res.render('updateStation', { station });
+});
+app.get('/rides', async function(req,res){
+  const rides = await db.select("*").from("se_project.rides");
+  return res.render('rides',{rides});
+});
+app.get('/dashboardAdmin', async function(req, res) {
+  return res.render('dashboardAdmin');
+});
+app.get('/senior', async function(req, res) {
+  const senior = await db.select('*').from('se_project.senior_requests');
+  return res.render('senior', { senior: senior, status: 'pending' });
+});
 };
   

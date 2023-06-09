@@ -19,4 +19,4 @@ module.exports = function (app) {
       const tickets = await db.select('*').from('se_project.tickets');
       return res.render('tickets', {tickets});
     });
-};
+    };

@@ -199,17 +199,19 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
       const user = await getUser(req);
       if (user.isAdmin) {
         const stationid = req.params.stationId;
-        const station = await db("se_project.stations").where("id", stationid).first();
-        // console.log(station.stationposition);
+        console.log("station id :" + stationid)
+        const station = await db("se_project.stations").select("*").where("id", stationid);
+        console.log("yess");
         if (!station) {
           return res.status(400).send("station not found");
         }
         if (station.stationtype == "normal" && station.stationposition == "start") {
           //normal & start         
-          const route = await db("se_project.routes").where("fromstationid", stationid).first();
-          // console.log(route);
+          const route = await db("se_project.routes").where("fromStationid", stationid).first();
+          console.log("weeeee" +route.fromStationid);
+          
           let newrouteid = route.fromstationid;
-          let nextroute = route.tostationid;
+          let nextroute = route.toStationid;
           await db("se_project.stations").where("id", newrouteid).del();
           await db("se_project.stations").where("id", nextroute).update({ stationposition: "start" });
           nextroute.stationposition = "start";
@@ -218,25 +220,25 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
         }
         else if (station.stationtype == "normal" && station.stationposition == "end") {
           //normal & end
-          const nextStationend = await db("se_project.stations").where("tostationid", stationid);
+          const nextStationend = await db("se_project.stations").where("toStationid", stationid);
 
           //fl end bnbd2 bl to w nnhi bl from, w not affect route brdo 
-          let newroute = nextStationend.tostationid;
-          let prevroute = nextStationend.fromstationid;
+          let newroute = nextStationend.toStationid;
+          let prevroute = nextStationend.fromStationid;
           await db("se_project.stations").where("id", newroute).del();
           await db("se_project.stations").where("id", prevroute).update({ stationposition: "end" });
           return res.status(200).send("Station deleted successfully");
 
         } else if (station.stationtype == "normal" && station.stationposition == ("middle")) {
           //normal & middle
-          const route = await db("se_project.routes").where("fromstationid", stationid);
+          const route = await db("se_project.routes").where("fromStationid", stationid);
           // console.log(route);
-          let oldroute = route[0].tostationid;
+          let oldroute = route[0].toStationid;
           let newroute = route[1].tostationid;
           const newrouteforward = {
             routename: "hi" + oldroute + "" + newroute,
-            fromstationid: oldroute,
-            tostationid: newroute,
+            fromStationid: oldroute,
+            toStationid: newroute,
           };
           let forward = await db("se_project.routes").insert(newrouteforward).returning("*");
           forward = forward[0];
@@ -244,8 +246,8 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
 
           const newroutebackward = {
             routename: "hi" + newroute + "" + oldroute,
-            fromstationid: newroute,
-            tostationid: oldroute,
+            fromStationid: newroute,
+            toStationid: oldroute,
           };
           let backward = await db("se_project.routes").insert(newroutebackward).returning("*");
           backward = backward[0];
@@ -279,27 +281,27 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
         } else if (station.stationtype == "transfer") {
           // Transfer
           const mystation = await db("se_project.stations").where("id", stationid).first();
-          console.log(mystation);
+          // console.log(mystation);
 
-          const routes = await db("se_project.routes").where("fromstationid", mystation.id);
-          console.log(routes);
+          const routes = await db("se_project.routes").where("fromStationid", mystation.id);
+          // console.log(routes);
 
           const toStationIds = []; // Array to store the tostationid values
 
 
           for (const route of routes) {
             // Get the tostationid value for the current route
-            const toStationId = route.tostationid;
-            console.log(toStationId);
+            const toStationId = route.toStationid;
+            // console.log(toStationId);
 
             if (toStationId !== null) {
               toStationIds.push(toStationId); // Add the tostationid to the array
             }
           }
-          console.log(toStationIds); // Log all the tostationid values
+          // console.log(toStationIds); // Log all the tostationid values
 
           const amount = toStationIds.length;
-          console.log(amount);
+          // console.log(amount);
           for (const toStationId of toStationIds) {
             const prevroute = mystation.id; // Use the 'id' property of mystation
 
@@ -308,33 +310,15 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
             for (let i = 0; i < amount; i++) {
               const newObj = {
                 routename: "hi" + prevroute + "" + toStationId,
-                fromstationid: prevroute,
-                tostationid: toStationId,
+                fromStationid: prevroute,
+                toStationid: toStationId,
               };
               await db("se_project.routes").insert(newObj);
             }
           }
         }
-        //   const prevStation = await db("se_project.stations").where("stationposition", "end").first();
-        //   const nextStations = await db("se_project.routes")
-        //     .where("fromstationid", stationid)
-        //     .pluck("tostationid");
-
-        //   for (const nextStationId of nextStations) {
-        //     const newObj = {
-        //       routename: "route_" + prevStation.id + "_" + nextStationId,
-        //       fromstationid: prevStation.id,
-        //       tostationid: nextStationId,
-        //     };
-
-        //     await db("se_project.routes").insert(newObj);
-        //   }
-        // }
-
         const deletingStation = await db("se_project.stations").where("id", stationid).del();
         return res.status(200).send("Station deleted successfully");
-
-
       } else {
         return res.status(400).send("Unauthorised access")
       }
@@ -415,21 +399,19 @@ app.post("/api/v1/senior/request", async function (req, res) {
 //update station(admin) done
 app.put("/api/v1/station/:stationId", async function (req, res) {
   try {
-    const user = await getUser(req);
-    const useridd = user.userid
-    if (user.isAdmin) {
-      // const {stationname} = req.body;
-      //const {stationid} = req.params;
-      await db("se_project.stations")
-        .where({ id: req.params.stationId })
-        .update({ stationname: req.body.stationname, id: req.params.stationId });
-      return res.status(200).send("stationId is updated successfully");
-    } else {
-      return res.status(400).send("you are not an admin");
-    }
+      const user = await getUser(req);
+      const useridd = user.userid;
+      if (user.isAdmin) {
+          await db("se_project.stations")
+              .where("id", req.params.stationId)
+              .update("stationname", req.body.stationname);
+          return res.status(200).send("Station Name is updated successfully");
+      } else {
+          return res.status(400).send("You are not an admin");
+      }
   } catch (e) {
-    console.log(e.message);
-    return res.status(400).send("can not update stationId");
+      console.log(e.message);
+      return res.status(400).send("Cannot update Station Name");
   }
 });
 //update route(admin) done
@@ -465,40 +447,41 @@ app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
   // console.log(route);
   // res.status(200).json(route);
   //});
-  // try {
+  try {
   let { originId, destinationId } = req.params;
-  let stationsCount = 1;
+  let destinationDistance = {};
   let destinationReached = false;
   let visitedStationsSet = new Set();
-  visitedStationsSet.add(originId);
+  let queue = [originId];
+
+  visitedStationsSet.add(Number(originId));
+  destinationDistance[originId] = 1;
   //ghalat
 
-  while (true) {
-    const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', originId);
-    stationsCount++;
-    let furthestStationId = 0;
-
-    for (let i = 0; i < toStationidsObjects.length; i++) {
-      let toStationId = toStationidsObjects[i].tostationid;
-      if (visitedStationsSet.has(toStationId)) {
-        continue;
-      } else {
-        visitedStationsSet.add(toStationId);
-      }
-      if (toStationId == destinationId) {
-        destinationReached = true;
-        break;
-      }
-      if (toStationId < destinationId && toStationId > furthestStationId) {
-        furthestStationId = toStationId;
-      }
-    }
-
-    if (destinationReached) {
+  while (queue.length > 0) {
+    let currentStation = queue.shift();
+    console.log("currentStation: " + currentStation);
+    if (currentStation == destinationId) {
+      destinationReached = true;
       break;
     }
-    originId = furthestStationId;
+    const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', currentStation);
+    console.log(toStationidsObjects);
+    for (let i = 0; i < toStationidsObjects.length; i++) {
+      let toStationId = toStationidsObjects[i].tostationid;
+      console.log("toStationId: " + toStationId);
+      if (visitedStationsSet.has(toStationId)) {
+        console.log("already visited: " + toStationId);
+        continue;
+      }
+      visitedStationsSet.add(toStationId);
+      destinationDistance[toStationId] = destinationDistance[currentStation] + 1;
+      queue.push(toStationId);
+    }
   }
+
+
+  const stationsCount = destinationDistance[destinationId];
   if (stationsCount <= 9) {
     price = 5;
   }
@@ -510,8 +493,11 @@ app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
   }
   // res.status(200).send("price of ticket equal:", price);
   res.status(200).json({stationsCount: stationsCount, price: price});
-
-
+}
+catch(e){
+  console.log(e.message);
+  res.status(400).send("wrong entry");
+}
 });
 
 //end of farah's code
@@ -536,6 +522,7 @@ app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
     return res.status(400).send("You can't create station");
 
   }
+  
 });
 
 
@@ -627,6 +614,70 @@ app.post("/api/v1/payment/ticket", async function (req, res) {
       return res.status(400).send("Could not subscribe");
   }
 });
-//this is farida's code
+//this is jana's code
+app.post("/api/v1/refund/:ticketId", async function (req, res) {
+  try {
+    const user = await getUser(req);
+    const { ticketId} = req.params;
+
+    const ticket = await db
+      .select("*")
+      .from("se_project.tickets")
+      .where("id", ticketId)
+      .first();
+    //const currentdate = new Date();
+    await db("se_project.tickets")
+      .where("id", ticketId)
+      .delete();
+    const refundTransaction = {
+      userId: user.id,
+      ticketId: await db.select("id").from("se_project.tickets"),
+      amount: await db.select("refundamount").from("se_project.refund_requests"),
+      ticketstatus: await db.select("status").from("se_project.refund_requests")
+    };
+
+    //await db("se_project.transactions").insert(refundTransaction);
+
+    return res.status(201).json({ message: "Ticket refunded successfully" });
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("Could not process refund request");
+ }
+  });
+  app.get("/api/v1/rides", async function(req, res) {
+    const user = getUser(req);
+    const rides = await db.select("*").from("se_project.rides");
+    return res.status(200).send(rides);
+  });
+  app.put("/api/v1/requests/senior/:requestId", async function(req, res) {
+    try {
+        let user = await getUser(req);
+        let { seniorstatus } = req.body;
+        let { requestId } = req.params;
+        let { userid } = await db("se_project.senior_requests").select("userid").where("id", requestId).first();
+        console.log(userid);
+        console.log(seniorstatus);
+        const nationalidcheck = await db("se_project.senior_requests").select("nationalid").where("userid", userid).first();
+        console.log(nationalidcheck)
+        if (seniorstatus === "approve"){
+            await db("se_project.senior_requests").where("id", requestId).update({ status: "accepted" });
+            await db("se_project.users").where("id", userid).update({ roleid: 3 }); // Update roleid to 3
+            const amountt = await db("se_project.transactions").select("amount").first();
+            const discount = amountt.amount - 0.5;
+            await db("se_project.senior_requests").where("id", requestId).del();
+
+            return res.status(200).send("Senior request is accepted");
+        }
+       else if (seniorstatus === "decline") {
+            await db("se_project.senior_requests").where("id", requestId).del();
+
+            return res.status(200).send("Senior request is rejected");
+        }
+    } catch (e) {
+        console.log(e.message);
+        return res.status(400).send("Rejected operation");
+    }
+});
+
 
 };
