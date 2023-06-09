@@ -42,6 +42,9 @@
                 <li><a href="/tickets">Tickets</a></li>
                 <li><a href="/routes">Routes</a></li>
               </ul>
+               {{#isAdmin}}
+             <li><a href="/dashboardAdmin" >Admin Access</a></li>
+              {{/isAdmin}}
               <ul class="nav navbar-nav navbar-right">
                 <li><a href="javascript:void(0)"
                     onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset Password</a></li>

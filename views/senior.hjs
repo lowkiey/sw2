@@ -10,50 +10,50 @@
     <script type="text/javascript">
         $(function () {
             // Attach event listeners to the buttons
-           
-    // Attach event listeners to the buttons
-    $(".approve-button").click(function () {
-        // Perform the appropriate action to approve the request
-        var row = $(this).closest("tr").index();
-        var requestId = $(this).data("request-id");
-        console.log("Approve button clicked for row:", row, "and request ID:", requestId);
-        $.ajax({
-            type: "PUT",
-            url: "/api/v1/requests/senior/" + requestId,
-            data: { seniorstatus: "approve" },
-            success: function (result) {
-                console.log(result);
-                // Remove the row from the table
-                $("tbody tr").eq(row).remove();
-                window.location.reload();
-            },
-            error: function (xhr, status, error) {
-                console.log("Error:", error);
-            }
-        });
-    });
 
-    $(".decline-button").click(function () {
-        // Perform the appropriate action to decline the request
-        var row = $(this).closest("tr").index();
-        var requestId = $(this).data("request-id");
-        console.log("Decline button clicked for row:", row, "and request ID:", requestId);
-        $.ajax({
-            type: "PUT",
-            url: "/api/v1/requests/senior/" + requestId,
-            data: { seniorstatus: "decline" },
-            success: function (result) {
-                console.log(result);
-                // Remove the row from the table
-                $("tbody tr").eq(row).remove();
-                window.location.reload();
-            },
-            error: function (xhr, status, error) {
-                console.log("Error:", error);
-            }
+            // Attach event listeners to the buttons
+            $(".approve-button").click(function () {
+                // Perform the appropriate action to approve the request
+                var row = $(this).closest("tr").index();
+                var requestId = $(this).data("request-id");
+                console.log("Approve button clicked for row:", row, "and request ID:", requestId);
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/requests/senior/" + requestId,
+                    data: { seniorstatus: "approve" },
+                    success: function (result) {
+                        console.log(result);
+                        // Remove the row from the table
+                        $("tbody tr").eq(row).remove();
+                        window.location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error:", error);
+                    }
+                });
+            });
+
+            $(".decline-button").click(function () {
+                // Perform the appropriate action to decline the request
+                var row = $(this).closest("tr").index();
+                var requestId = $(this).data("request-id");
+                console.log("Decline button clicked for row:", row, "and request ID:", requestId);
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/requests/senior/" + requestId,
+                    data: { seniorstatus: "decline" },
+                    success: function (result) {
+                        console.log(result);
+                        // Remove the row from the table
+                        $("tbody tr").eq(row).remove();
+                        window.location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error:", error);
+                    }
+                });
+            });
         });
-    });
-});
 
     </script>
 </head>
@@ -80,6 +80,9 @@
                                 <li><a href="/tickets">Tickets</a></li>
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
+                                {{#isAdmin}}
+                                <li><a href="/dashboardAdmin">Admin Access</a></li>
+                                {{/isAdmin}}
                                 <li><a href="javascript:void(0)"
                                         onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset
                                         Password</a></li>
