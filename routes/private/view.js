@@ -50,8 +50,10 @@ module.exports = function(app) {
     const refund= await db.select('*').from('se_project.refund_requests');
     return res.render('refund', {refund});
   });
-  
-
+  app.get('/dashboardAdmin', async function(req, res) {
+    const user = await getUser(req);
+    return res.render('dashboardAdmin', {user});
+  });
   app.get('/stations_example', async function(req, res) {
     const user = await getUser(req);
     const stations = await db.select('*').from('se_project.stations');
