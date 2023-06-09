@@ -8,7 +8,7 @@ const getUser = async function (req) {
   if (!sessionToken) {
     return res.status(301).redirect("/");
   }
-  console.log("hi",sessionToken);
+  console.log("hi", sessionToken);
   const user = await db
     .select("*")
     .from("se_project.sessions")
@@ -47,33 +47,46 @@ module.exports = function (app) {
     }
 
   });
-//senior request (user) (Tested)
-app.post("/api/v1/senior/request", async function (req, res) {
+  //senior request (user) (Tested)
+  app.post("/api/v1/senior/request", async function (req, res) {
     try {
       const { nationalid } = req.body;
+      console.log(nationalid);
       const user = await getUser(req);
-  
+      console.log(user.userid);
+      const existingSeniorRequest = await db("se_project.senior_requests")
+        .where("userid", user.userid)
+        .first();
+
+      if (existingSeniorRequest && existingSeniorRequest.status === "pending") {
+        console.log("hi");
+        return res.status(400).send("You already have a pending request");
+      }
+
+      if (user.isSenior) {
+        return res.status(400).send("You are already a senior");
+      }
+
       const seniorRequest = {
         nationalid: nationalid,
         status: "pending",
-        userid: user.id
+        userid: user.userid
       };
-  
-      await db("se_project.senior_requests").insert(seniorRequest).returning("*");
-      
-      return res.status(200).send("Senior request has been added successfully");
+
+      await db("se_project.senior_requests").insert(seniorRequest);
+      return res.status(200).send(seniorRequest.status);
     } catch (error) {
       console.error(error.message);
       return res.status(400).send("Could not add nationalId");
     }
-});
-//reset password (Tested)
-app.put("/api/v1/password/reset",async function(req,res){
-    try{
-      const {newPassword } = req.body;
+  });
+  //reset password (Tested)
+  app.put("/api/v1/password/reset", async function (req, res) {
+    try {
+      const { newPassword } = req.body;
       const user = await getUser(req);
       const useridn = user.userid;
-      
+
       await db("se_project.users")
         .where("id", useridn)
         .update({ password: newPassword });
@@ -99,9 +112,8 @@ app.put("/api/v1/password/reset",async function(req,res){
   app.post("/api/v1/payment/subscription", async function (req, res) {
     try {
       const user = await getUser(req);
-      const { purchaseid, creditcardnumber, holdername, payedamount, subtype, zoneid } = req.body;
-      const transaction = { amount: payedamount, userid: user.userid, purchaseid: purchaseid };
-      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
+      const { creditcardnumber, holdername, payedamount, subtype, zoneid } = req.body;
+      console.log("hi");
       let numOftickets = 0;
       if (subtype == "monthly") {
         numOftickets = 10;
@@ -110,8 +122,16 @@ app.put("/api/v1/password/reset",async function(req,res){
       } else if (subtype == "yearly") {
         numOftickets = 100;
       }
-      const subscription = { subtype: subtype, zoneid: zoneid, userid: user.userid, numOftickets };
-      const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("id");
+      const subscription = { subtype: subtype, zoneid: zoneid, userid: user.id, nooftickets: numOftickets };
+      console.log(subscription);
+      console.log("bekh");
+      const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("*");
+      const subid = subscriptionid.id;
+      console.log(subid)
+      const transaction = { amount: payedamount, userid: user.id, purchasedid: subid };
+      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("*");
+
+
       return res.status(200).json({ transactionid, subscriptionid });
     } catch (e) {
       console.log(e.message);
@@ -123,53 +143,107 @@ app.put("/api/v1/password/reset",async function(req,res){
   app.post("/api/v1/tickets/purchase/subscription", async function (req, res) {
     try {
       const user = await getUser(req);
-      const {subid, origin, destination, tripdate} = req.body;
+      const { subid, origin, destination, tripdate } = req.body;
       const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subid).andWhere("userid", user.id);
-      const ticket = {origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid};
+      const ticket = { origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid };
       const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
-      return res.status(200).json({ticketid});
-  }catch(e){
+      return res.status(200).json({ ticketid });
+    } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not purchase ticket");
-  }
-});
-
-
-// manageRequests(admin): accept/reject refund request (Tested)
-app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
-  try {
-    const user = await getUser(req);
-    if (user.isAdmin) {
-      console.log(user.roleid);
-      const { refundstatus } = req.body;
-      const { requestid } = req.params;
-      const refundrequest = await db("se_project.refund_requests").where("id", requestid).first();
-      const ticketid = refundrequest.ticketid;
-      console.log(ticketid);
-      console.log(requestid);
-      if (refundstatus === "Accept") {
-        console.log(refundstatus);
-        const subid = await db("se_project.tickets").where("id", ticketid).select("subid").first();
-        const transactionid = await db("se_project.tickets").where("id", ticketid).select("purchaseid").first();
-        if (subid && ticketid === subid.subid) { // if ticket is subscription
-          const deletesubride = await db("se_project.tickets").where("subid", subid.subid).del();
-          const ticketamount = await db("se_project.tickets").where("subid", subid.subid).select("nooftickets").first();
-          // Update the ticketamount logic as per your requirements
-          ticketamount.nooftickets = ticketamount.nooftickets + 1;
-          // Update the ticketamount back to the database
-          await db("se_project.tickets").where("subid", subid.subid).update("nooftickets", ticketamount.nooftickets);
-          return res.status(200).send(deletesubride);
-        } else if (transactionid && ticketid === transactionid.purchaseid) { // if ticket is transaction
-          const deleteticket = await db("se_project.tickets").where("id", ticketid).del();
-          return res.status(200).send("Deleted Successfully");
-        }
-      } else if (refundstatus === "Reject") {
-        console.log(refundstatus);
-        const deleteRequest = await db("se_project.refund_requests").where("id", requestid).del();
-        return res.status(200).send("Deleted Successfully");
-      }
     }
-   } catch (e) {
+  });app.post("/api/v1/refund/:ticketId", async (req, res) => {
+    const { ticketId } = req.params;
+    const user = await getUser(req);
+    const userid = user.id;
+  
+    const ticket = await db("se_project.tickets")
+      .select('*')
+      .where({ id: ticketId })
+      .first();
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+  
+    // Check if ticket is future-dated
+    const currentDate = new Date();
+    if (ticket.tripdate > currentDate) {
+      // Insert refund request
+      const transaction = await db("se_project.transactions")
+        .select('*')
+        .where({ purchasedid: ticketId })
+        .first();
+      if (!transaction) {
+        return res.status(500).json({ error: "Transaction not found" });
+      }
+  
+      const refundamount = transaction.amount;
+      const refundRequest = await db('se_project.refund_requests').insert({
+        status: 'pending',
+        userid: userid,
+        refundamount: refundamount,
+        ticketid: ticketId,
+      });
+  
+      // Delete ticket
+      return res.json( "Ticket refunded successfully");
+    } else {
+    
+      return res.status(500).json( "Ticket already used" );
+    }
+  });
+
+  // manageRequests(admin): accept/reject refund request (Tested)
+  app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      if (user.isAdmin) {
+        const { refundstatus } = req.body;
+        const { requestid } = req.params;
+        console.log(requestid);
+        const refundrequest = await db("se_project.refund_requests").where({"id": requestid}).first();
+        console.log(refundrequest);
+        if (!refundrequest) {
+          return res.status(404).send("Refund request not found");
+        }
+        const ticketid = refundrequest.ticketid;
+        if (refundstatus === "Accept") {
+          console.log("hi");
+          const subid = await db("se_project.tickets").where({"id": ticketid}).select("subid").first();
+          console.log(subid.subid);
+          const transactionid = await db("se_project.tickets").where({"id": ticketid}).select("id").first();
+          console.log(transactionid);
+          const sub = await db("se_project.subsription").where("id", subid.subid).first();
+          console.log(sub.id);
+          if (subid.subid == sub.id) {
+            console.log("hi");
+            console.log(sub.id);
+            //await db("se_project.tickets").where({"subid": sub.id}).del();
+            const ticketamount = await db("se_project.subsription").where({"id": subid.subid}).select("*").first();
+            console.log(ticketamount.nooftickets);
+            if (!ticketamount) {
+              return res.status(404).send("Ticket not found");
+            }
+            console.log("mimimomo");
+            ticketamount.nooftickets = ticketamount.nooftickets + 1;
+           const vare = await db("se_project.subsription").where("id", sub.id).update("nooftickets", ticketamount.nooftickets);
+           console.log(vare);
+           await db("se_project.refund_requests").where({"ticketid":transactionid.id}).update("status","Approve");;
+            return res.status(200).send("Refund request accepted and ticket deleted");
+          } else if (transactionid && ticketid === transactionid.purchaseid) {
+            await db("se_project.tickets").where("id", ticketid).del();
+            return res.status(200).send("Refund request accepted and ticket deleted");
+          } else {
+            return res.status(404).send("Ticket not found");
+          }
+        } else if (refundstatus === "Reject") {
+          await db("se_project.refund_requests").where("id", requestid).update("status","Decline");
+          return res.status(200).send("Refund request rejected and deleted");
+        } else {
+          return res.status(400).send("Invalid refund status");
+        }
+      }
+    } catch (e) {
       console.error(e.message);
       return res.status(500).send("Internal server error");
     }
@@ -216,8 +290,8 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
         if (station.stationtype == "normal" && station.stationposition == "start") {
           //normal & start         
           const route = await db("se_project.routes").where("fromStationid", stationid).first();
-          console.log("weeeee" +route.fromStationid);
-          
+          console.log("weeeee" + route.fromStationid);
+
           let newrouteid = route.fromstationid;
           let nextroute = route.toStationid;
           await db("se_project.stations").where("id", newrouteid).del();
@@ -344,9 +418,10 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
         // console.log(routeId);
         const routeToDelete = await db("se_project.routes").where("id", routeId).first();
         // console.log(routeToDelete.id);
-        let from = routeToDelete.fromStationid;
+        const from = routeToDelete.fromstationid;
+        
         // console.log(from);
-        let to = routeToDelete.toStationid;
+        let to = routeToDelete.tostationid;
         // console.log(to);
         if (!routeToDelete) {
           return res.status(404).send("Route not found");
@@ -391,61 +466,28 @@ app.put("/api/v1/requests/refunds/:requestid", async function (req, res) {
   //this is martina's code
   //Starting farah's code 
 
-  app.post("/api/v1/senior/request", async function (req, res) {
+  //update station(admin) done
+  app.put("/api/v1/station/:stationId", async function (req, res) {
     try {
-      const { nationalid } = req.body;
-      console.log(nationalid);
       const user = await getUser(req);
-      console.log(user.userid);
-      const existingSeniorRequest = await db("se_project.senior_requests")
-        .where("userid", user.userid)
-        .first();
-
-      if (existingSeniorRequest && existingSeniorRequest.status === "pending") {
-        console.log("hi");
-        return res.status(400).send("You already have a pending request");
+      const useridd = user.userid
+      if (user.isAdmin) {
+        // const {stationname} = req.body;
+        //const {stationid} = req.params;
+        await db("se_project.stations")
+          .where({ id: req.params.stationId })
+          .update({ stationname: req.body.stationname, id: req.params.stationId });
+        return res.status(200).send("stationId is updated successfully");
+      } else {
+        return res.status(400).send("you are not an admin");
       }
-
-      if (user.isSenior) {
-        return res.status(400).send("You are already a senior");
-      }
-
-      const seniorRequest = {
-        nationalid: nationalid,
-        status: "pending",
-        userid: user.userid
-      };
-
-      await db("se_project.senior_requests").insert(seniorRequest);
-      return res.status(200).send(seniorRequest.status);
-    } catch (error) {
-      console.error(error.message);
-      return res.status(400).send("Could not add nationalId");
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("can not update stationId");
     }
   });
 
-//update station(admin) done
-app.put("/api/v1/station/:stationId", async function (req, res) {
-  try {
-    const user = await getUser(req);
-    const useridd = user.userid
-    if (user.isAdmin) {
-      // const {stationname} = req.body;
-      //const {stationid} = req.params;
-      await db("se_project.stations")
-        .where({ id: req.params.stationId })
-        .update({ stationname: req.body.stationname, id: req.params.stationId });
-      return res.status(200).send("stationId is updated successfully");
-    } else {
-      return res.status(400).send("you are not an admin");
-    }
-  } catch (e) {
-    console.log(e.message);
-    return res.status(400).send("can not update stationId");
-  }
-});
 
-  
   //update route(admin) done
   app.put("/api/v1/route/:routeId", async function (req, res) {
     try {
@@ -454,8 +496,8 @@ app.put("/api/v1/station/:stationId", async function (req, res) {
       if (user.isAdmin) {
         //onst {routeid} = req.params;
         await db("se_project.routes")
-          .where("id" ,req.params.routeId )
-          .update( "routename", req.body.routename );
+          .where("id", req.params.routeId)
+          .update("routename", req.body.routename);
         return res.status(200).send("routeid is updated successfully");
       }
       else {
@@ -471,268 +513,272 @@ app.put("/api/v1/station/:stationId", async function (req, res) {
 
 
 
-//check price
-app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
-  // const { originId, destinationId } = req.params;
-  // const route = await db.select('*').from('se_project.routes').where('fromstationid', originId).andWhere('tostationid', destinationId);
-  // console.log(route);
-  // res.status(200).json(route);
-  //});
-  try {
-  let { originId, destinationId } = req.params;
-  let destinationDistance = {};
-  let destinationReached = false;
-  let visitedStationsSet = new Set();
-  let queue = [originId];
+  //check price
+  app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
+    // const { originId, destinationId } = req.params;
+    // const route = await db.select('*').from('se_project.routes').where('fromstationid', originId).andWhere('tostationid', destinationId);
+    // console.log(route);
+    // res.status(200).json(route);
+    //});
+    try {
+      let { originId, destinationId } = req.params;
+      let destinationDistance = {};
+      let destinationReached = false;
+      let visitedStationsSet = new Set();
+      let queue = [originId];
 
-  visitedStationsSet.add(Number(originId));
-  destinationDistance[originId] = 1;
-  //ghalat
+      visitedStationsSet.add(Number(originId));
+      destinationDistance[originId] = 1;
+      //ghalat
 
-  while (queue.length > 0) {
-    let currentStation = queue.shift();
-    console.log("currentStation: " + currentStation);
-    if (currentStation == destinationId) {
-      destinationReached = true;
-      break;
-    }
-    const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', currentStation);
-    console.log(toStationidsObjects);
-    for (let i = 0; i < toStationidsObjects.length; i++) {
-      let toStationId = toStationidsObjects[i].tostationid;
-      console.log("toStationId: " + toStationId);
-      if (visitedStationsSet.has(toStationId)) {
-        console.log("already visited: " + toStationId);
-        continue;
+      while (queue.length > 0) {
+        let currentStation = queue.shift();
+        console.log("currentStation: " + currentStation);
+        if (currentStation == destinationId) {
+          destinationReached = true;
+          break;
+        }
+        const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', currentStation);
+        console.log(toStationidsObjects);
+        for (let i = 0; i < toStationidsObjects.length; i++) {
+          let toStationId = toStationidsObjects[i].tostationid;
+          console.log("toStationId: " + toStationId);
+          if (visitedStationsSet.has(toStationId)) {
+            console.log("already visited: " + toStationId);
+            continue;
+          }
+          visitedStationsSet.add(toStationId);
+          destinationDistance[toStationId] = destinationDistance[currentStation] + 1;
+          queue.push(toStationId);
+        }
       }
-      visitedStationsSet.add(toStationId);
-      destinationDistance[toStationId] = destinationDistance[currentStation] + 1;
-      queue.push(toStationId);
-    }
-  }
 
 
-  const stationsCount = destinationDistance[destinationId];
-  if (stationsCount <= 9) {
-    price = 5;
-  }
-  else if (stationsCount >= 10 & stationsCount <= 16) {
-    price = 7;
-  }
-  else {
-    price = 10;
-  }
-  // res.status(200).send("price of ticket equal:", price);
-  res.status(200).json({stationsCount: stationsCount, price: price});
-}
-catch(e){
-  console.log(e.message);
-  res.status(400).send("wrong entry");
-}
-});
-//end of farah's code
-//startof farida's code
- //ADMIN create a station
- 
- app.post ("/api/v1/station", async function (req, res){
-  const user= await getUser(req);
-  if(user.isAdmin){
-    try{
-    const stationname = req.body;
-    const userid=user.userid;
-      await db("se_project.stations").where("id" , userid).insert({"stationname": stationname , "stationtype": "normal" , "stationstatus" :"new"});
-      return res.status(200).send("Station Created!");
+      const stationsCount = destinationDistance[destinationId];
+      if (stationsCount <= 9) {
+        price = 5;
+      }
+      else if (stationsCount >= 10 & stationsCount <= 16) {
+        price = 7;
+      }
+      else {
+        price = 10;
+      }
+      // res.status(200).send("price of ticket equal:", price);
+      res.status(200).json( price);
     }
-    catch(e){
+    catch (e) {
       console.log(e.message);
-      return res.status(400).send("Could not create station");
+      res.status(400).send("wrong entry");
     }
-  }
-  else{
-    return res.status(400).send("You can't create station");
+  });
+  //end of farah's code
+  //startof farida's code
+  //ADMIN create a station
 
-  }
-});
-
-
-//ADMIN creates a route 
-app.post("/api/v1/route", async function(req,res){
-  try{
-  const user= await getUser(req);
-  if(user.isAdmin){
-    const {newStationId, connectedStationId, routeName} = req.body;
-    if (!newStationId || !connectedStationId || !routeName) {
-      return res.status(400).send("Missing required fields");
-    }
-    const connectedStationPosition= await db.select("stationposition").from("se_project.stations").where({"id": connectedStationId}).first();
-    const routeid= await db.select("id").from("se_project.routes").where("routename", routeName);
-    if(connectedStationPosition=='start'){
-    
-        const idroute= await db.select("id").from("se_project.routes").where({"routename": routeName})
-        const newroute={
-          routename: routeName,
-          fromStationid: newStationId,
-          toStationid: connectedStationId,
-        };
-        const newstationroute={
-          stationid: newStationId,
-          routeid: idroute,
-        };
-        const route= await db("se_project.routes").insert(newroute).returning("*");
-        await db("se_project.stations").where("id",newStationId).update({stationposition: "start"});
-        const newroutestation= await db("stationRoutes").insert(newstationroute).returning("*");
-      await db("se_project.stations").where("id",connectedStationId).update({stationposition: "middle"});
-        return res.status(200).json(route); 
-        //return res.status(200).json(newroutestation);
-
-    }
-    else if(connectedStationPosition=='end'){
+  app.post("/api/v1/station", async function (req, res) {
+    const user = await getUser(req);
+    if (user.isAdmin) {
+      try {
+        const { stationname } = req.body; // Destructure the stationname from the request body
+        const userid = user.userid;
+        await db("se_project.stations").where("id", userid).insert({ stationname, "stationtype": "normal", "stationstatus": "new" });
+        return res.status(200).send(stationname); // Send only the stationname as the response
+      } catch (e) {
+        console.log(e.message);
+        return res.status(400).send("Could not create station");
+      }
+    } else {
+      return res.status(400).send("You can't create station");
+    }     
+  });
   
-        const newroute={
-          routename: routeName,
-          fromStationid: newStationId,
-          toStationid: connectedStationId,
-        };
-        const newstationroute={
-          stationid: newStationId,
-          routeid: routeid,
-        };
-        await db("se_project.stations").where("id",newStationId).update({stationposition: "end"});
-        await db("se_project.stations").where("id",connectedStationId).update({stationposition: "middle"});
-        const route= await db("se_project.routes").insert(newroute).returning("*");
-        const routeid= await db.select("id").from("se_project.routes").where({"routename": routeName});
-        res.status(200).json(route); 
-        const newroutestation= await db("stationRoutes").insert(newstationroute).returning("*");
-        //no "return"
-         res.status(200).json(newroutestation); 
 
-      //ROUTE ID MENEN
-      
-        
-    // newStationPosition= 'end';
-      // connectedStationPosition='middle';
-      // route.fromStationid= connectedStationId;
-      // route.toStationid= newStationId;
-    
-    }
-  }
-//UPDATE ROUTES AS WELL
+
+  //ADMIN creates a route 
+  app.post("/api/v1/route", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      if (user.isAdmin) {
+        const {newStationId, connectedStationId, routeName } = req.body;
+        if (!newStationId || !connectedStationId || !routeName) {
+          return res.status(400).send("Missing required fields");
+        } 
+        const connectedStationPosition = await db.select("stationposition").from("se_project.stations").where({ "id": connectedStationId }).first();
+        console.log("hello");
+        const routeid = await db.select("id").from("se_project.routes").where({ "routename": routeName }).first();
+        console.log("hello1");
+        if (connectedStationPosition.stationposition === "start") {
+          console.log("moo");
+          const newroute = {
+            routename: routeName,
+            fromstationid: newStationId,
+            tostationid: connectedStationId,
+          };
+          console.log("hi");
+          await db("se_project.stations").where({"id": newStationId}).update({stationposition: "start" });
+          console.log("mimmiii");
+          await db("se_project.stations").where({"id":connectedStationId}).update({stationposition: "middle"});
+          console.log("moomoooo");
+          const route = await db("se_project.routes").insert(newroute).returning("*");
+          console.log(route);
+          const newstationroute = {
+            stationid: newStationId,
+            routeid:route[0].id,
+          };
+          console.log("alo");
+          await db("se_project.stationroutes").insert(newstationroute);
+          console.log(newstationroute);
+
+          return res.status(200).json(route);
+        } 
+        else if (connectedStationPosition === "end") {
+          const newroute = {
+            routename: routeName,
+            fromstationid: connectedStationId,
+            tostationid: newStationId,
+          };
+          await db("se_project.stations").where("id", newStationId).update({stationposition: "end" });
+          await db("se_project.stations").where("id", connectedStationId).update({ stationposition: "middle" });
+          const route = await db("se_project.routes").insert(newroute).returning("*");
+          const newstationroute = {
+            stationid: newStationId,
+            routeid: route[0].id,
+          };
+          await db("se_project.stationroutes").insert(newstationroute);
+          return res.status(200).json(route);
+        }
+      }
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not create route");
     }
-  
-});
-///pay ticket for subscription:
-app.post("/api/v1/payment/ticket", async function (req, res) {
-  try{
+  });
+  ///pay ticket for subscription:
+  app.post("/api/v1/payment/ticket", async function (req, res) {
+    try {
       const user = await getUser(req);
       const useridsubscription = await db.select("userid").from("se_project.subsription");
-      if(useridsubscription != user.id){
-      const {purchasediid, creditcardnumber, holdername, payedamount, origin, destination, tripdate} = req.body;
-      const transaction = {amount: payedamount, userid: user.id, purchasediid: purchasediid};
-      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
-      //insert ticket into upcoming ride 
-      //const ticketinsert = await db("se_project.rides").insert(tripdate).returning("id","tripdate");
-      return res.status(200).json({transactionid});
-      }else{
+      if (useridsubscription != user.id) {
+        const { purchasediid, creditcardnumber, holdername, payedamount, origin, destination, tripdate } = req.body;
+        const transaction = { amount: payedamount, userid: user.id, purchasediid: purchasediid };
+        const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
+        //insert ticket into upcoming ride 
+        //const ticketinsert = await db("se_project.rides").insert(tripdate).returning("id","tripdate");
+        return res.status(200).json({ transactionid });
+      } else {
         return res.status(200).send("user has a subscription");
       }
-  }catch(e){
+    } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not Purchase Ticket");
     }
   });
-  
+
   //this is farida's code
-//start of eyad's code
-//table viewing routes
-app.get("/api/v1/routes", async function(req, res){
-  const getroutes = await db("se_project.routes").select("*");
-  return res.status(200).json(getroutes);
-});
+  //start of eyad's code
+  app.put("/api/v1/requests/senior/:requestId", async function(req, res) {
+    try {
+        let user = await getUser(req);
+        let { seniorstatus } = req.body;
+        let { requestId } = req.params;
+        let { userid } = await db("se_project.senior_requests").select("userid").where("id", requestId).first();
+        console.log(userid);
+        console.log(seniorstatus);
+        const nationalidcheck = await db("se_project.senior_requests").select("nationalid").where("userid", userid).first();
+        console.log(nationalidcheck)
+        if (seniorstatus === "approve"){
+            await db("se_project.senior_requests").where("id", requestId).update({ status: "accepted" });
+            await db("se_project.users").where("id", userid).update({ roleid: 3 }); // Update roleid to 3
+            const amountt = await db("se_project.transactions").select("amount").first();
+            const discount = amountt.amount - 0.5;
+            await db("se_project.senior_requests").where("id", requestId).del();
 
-//view pending refund requests
-app.get("/api/v1/refunds", async function(req,res){
-  const getrefund = await db("se_project.refunds").select("*");
-  return res.status(200).json(getrefund);
-});
+            return res.status(200).send("Senior request is accepted");
+        }
+       else if (seniorstatus === "decline") {
+            await db("se_project.senior_requests").where("id", requestId).del();
 
-//view pending senior requests
-app.get("/api/v1/seniorrequests", async function(req,res){
-  const getsnior = await db("se_project.senior_requests").select("*");
-  return res.status(200).json(getsnior);
-});
-
-//view all zones
-app.get("/api/v1/zones", async function(req,res) {
-const allzones = await db("se_project.zones").select("*")
-return res.status(200).json(allzones);
-});
-
-app.put("/api/v1/zones/:zoneId", async function(req,res){
-  try{
-    const user = await getUser(req);
-    if(user.isAdmin){
-   
-    const updatedprice = await db("se_project.zones").where("id", req.params.zoneId).update("price", req.body.price);
-    console.log(updatedprice.price);
-    return res.status(200).send(updatedprice.price);
-    }else{
-      return res.status(400).send("You are not authorized to update zone price");
+            return res.status(200).send("Senior request is rejected");
+        }
+    } catch (e) {
+        console.log(e.message);
+        return res.status(400).send("Rejected operation");
     }
-  } catch(e){
-    console.log(e.message);
-    return res.status(400).send("failed to update");
-} 
-
 });
-//this is eyads code(mn wp) 
-app.post("/api/v1/refund/:ticketId", async (req, res) => {
-  const { ticketId } = req.params;
-  console.log(ticketId)
-  const user = await getUser(req);
-  const userid = user.userid;
 
-  const ticket = await db("se_project.tickets")
-    .select('*')
-    .where({ id: ticketId })
-    .first();
-  console.log(ticket)
-  if (!ticket) {
-    return res.status(404).json({ error: "Ticket not found" });
-  }
 
-  // Check if ticket is future-dated
-  const currentDate = new Date();
-  const ticketDate = new Date(ticket.tripdate);
- 
-  console.log(currentDate)
-  console.log(ticketDate)
-  if (ticketDate.getTime() > currentDate.getTime()) {
-    console.log("ana fl if")
-    // Insert refund request
-    const transaction = await db("se_project.transactions").select('*').where("purchasedid", ticketId ).first();
-    console.log(transaction)
-    if (!transaction) {
-      return res.status(500).json({ error: "Transaction not found" });
-    }
-    const refundamount = transaction.amount;
-    console.log(refundamount)
-    const refundRequest = await db('se_project.refund_requests').insert({
-      status: 'pending',
-      userid: userid,
-      refundamount: refundamount,
-      ticketid: ticketId,
-    });
-
-    // Delete ticket
-    return res.json( "Ticket refunded successfully");
-  } else {
+  //Update Zone Price 
+  app.put("/api/v1/zones/:zoneId", async function(req,res){
+    try{
+      const user = await getUser(req);
+      if(user.isAdmin){
+     
+      const updatedprice = await db("se_project.zones").where("id", req.params.zoneId).update("price", req.body.price);
+      console.log(updatedprice.price);
+      return res.status(200).send(updatedprice.price);
+      }else{
+        return res.status(400).send("You are not authorized to update zone price");
+      }
+    } catch(e){
+      console.log(e.message);
+      return res.status(400).send("failed to update");
+  } 
   
-    return res.status(500).json( "Ticket already used" );
-  }
-});
-//this is farida's code
+  });
+
+
+  //table viewing routes
+  app.get("/api/v1/routes", async function (req, res) {
+    try {
+      const getroutes = await db("se_project.routes").select("*");
+      return res.status(200).json(getroutes);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not get routes");
+    }
+  });
+
+  //view pending refund requests
+  app.get("/api/v1/refunds", async function (req, res) {
+    try {
+      const getrefund = await db("se_project.refunds").select("*");
+      return res.status(200).json(getrefund);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not get refund requests");
+    }
+  });
+
+  //view pending senior requests
+  app.get("/api/v1/seniorrequests", async function (req, res) {
+    try {
+      const getsnior = await db("se_project.senior_requests").select("*");
+      return res.status(200).json(getsnior);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not get senior requests");
+    }
+  });
+
+  //view all zones
+  app.get("/api/v1/zones", async function (req, res) {
+    try {
+      const allzones = await db("se_project.zones").select("*")
+      return res.status(200).json(allzones);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not get zones");
+    }
+  });
+  app.get("/api/v1/stations", async function (req, res) {
+    try {
+      const stations = await db("se_project.stations").select("*")
+      return res.status(200).json(stations);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not get stations");
+    }
+  });
 
 };

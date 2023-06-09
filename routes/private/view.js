@@ -95,9 +95,9 @@ app.get('/senior', async function(req, res) {
     const stations = await db.select('*').from('se_project.stations');
     return res.render('prices', { stations });
   });
-  app.get('/senior', async function (req, res) {
+  app.get('/Senior2', async function (req, res) {
     const seniorRequest = await db.select('*').from('se_project.senior_requests');
-    return res.render('senior', { seniorRequest });
+    return res.render('Senior2', { seniorRequest });
 
   });
   app.get('/paymentMethod', async function (req, res) {

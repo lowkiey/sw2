@@ -92,7 +92,7 @@
           var routeID = $(this).data('route-id');
           $.ajax({
             type: 'DELETE',
-            url: '/api/v1/route/:routeId' + routeID,
+            url: '/api/v1/route/' + routeID,
             success: function (data) {
               alert(data);
               // Remove the deleted row from the table

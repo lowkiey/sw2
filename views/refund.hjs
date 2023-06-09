@@ -18,12 +18,12 @@
                 $.ajax({
                     type: "PUT",
                     url: "/api/v1/requests/refunds/" + requestId,
-                    data: { refundstatus: "Approve" },
+                    data: { refundstatus: "Accept" },
                     success: function (result) {
                         console.log(result);
                         // Remove the row from the table
                         $("tbody tr").eq(row).remove();
-                        window.location.reload();
+                     
 
                     },
                     error: function (xhr, status, error) {
@@ -40,12 +40,12 @@
                 $.ajax({
                     type: "PUT",
                     url: "/api/v1/requests/refunds/" + requestId,
-                    data: { refundstatus: "Decline" },
+                    data: { refundstatus: "Reject" },
                     success: function (result) {
                         console.log(result);
                         // Remove the row from the table
                         $("tbody tr").eq(row).remove();
-                        window.location.reload();
+                       
 
                     },
                     error: function (xhr, status, error) {
@@ -90,9 +90,9 @@
                     <td>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-success approve-button"
-                                data-request-id="{{id}}">Approve</button>
+                                data-request-id="{{id}}">Accept</button>
                             <button type="button" class="btn btn-danger decline-button"
-                                data-request-id="{{id}}">Decline</button>
+                                data-request-id="{{id}}">Reject</button>
                         </div>
                     </td>
                 </tr>
