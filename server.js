@@ -8,23 +8,13 @@ const publicViewRoutes = require('./routes/public/view');
 const privateViewRoutes = require('./routes/private/view');
 
 // view engine setup
-<<<<<<< HEAD
-app.set('views', path.join(__dirname, 'views'));   //only time I want to retrieve HTML will be from views folder
-app.set('view engine', 'hjs');    //connect view with hjs
-=======
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hjs');  //which page im gonna load, using which extention of the pages
->>>>>>> d03dac7554b3ec10b2dc3f0dc035431b275ded3e
 // Config setup to allow our HTTP server to serve static files from our public directory
 app.use(express.static('public'));  //el folder el esmo public khlih static 
 // Config setup to parse JSON payloads from HTTP POST request body
-<<<<<<< HEAD
-app.use(express.json());    //allows us to setup view 
-app.use(express.urlencoded({extended:true}));
-=======
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));  //btsm7 en a pass array 
->>>>>>> d03dac7554b3ec10b2dc3f0dc035431b275ded3e
 
 // All public routes can be accessible without authentication
 //endpoints ll frontend w kolgoum type get
