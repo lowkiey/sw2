@@ -87,7 +87,7 @@ module.exports = function (app) {
     try {
       const user = await getUser(req);
       const { purchaseid, creditcardnumber, holdername, payedamount, subtype, zoneid } = req.body;
-      const transaction = { amount: payedamount, userid: user.id, purchaseid: purchaseid };
+      const transaction = { amount: payedamount, userid: user.userid, purchaseid: purchaseid };
       const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
       let numOftickets = 0;
       if (subtype == "monthly") {
@@ -97,7 +97,7 @@ module.exports = function (app) {
       } else if (subtype == "yearly") {
         numOftickets = 100;
       }
-      const subscription = { subtype: subtype, zoneid: zoneid, userid: user.id, numOftickets };
+      const subscription = { subtype: subtype, zoneid: zoneid, userid: user.userid, numOftickets };
       const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("id");
       return res.status(200).json({ transactionid, subscriptionid });
     } catch (e) {
@@ -114,7 +114,7 @@ module.exports = function (app) {
       // console.log(subid);
       const subscription = await db.select("*").from("se_project.subsription").where("id", subid).first();
       console.log(subscription.id);
-      const ticket = { origin:origin, destination:destination, userid: user.id, tripdate: tripdate, subid: subscription.id };
+      const ticket = { origin:origin, destination:destination, userid: user.userid, tripdate: tripdate, subid: subscription.id };
       console.log(ticket.tripdate);
       const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
       console.log(ticketid);
@@ -378,9 +378,9 @@ module.exports = function (app) {
       const { nationalid } = req.body;
       console.log(nationalid);
       const user = await getUser(req);
-      console.log(user.id);
+      console.log(user.userid);
       const existingSeniorRequest = await db("se_project.senior_requests")
-        .where("userid", user.id)
+        .where("userid", user.userid)
         .first();
 
       if (existingSeniorRequest && existingSeniorRequest.status === "pending") {
@@ -395,7 +395,7 @@ module.exports = function (app) {
       const seniorRequest = {
         nationalid: nationalid,
         status: "pending",
-        userid: user.id
+        userid: user.userid
       };
 
       await db("se_project.senior_requests").insert(seniorRequest);
@@ -430,14 +430,13 @@ module.exports = function (app) {
   //update route(admin) done
   app.put("/api/v1/route/:routeId", async function (req, res) {
     try {
-      const price = 0;
       const user = await getUser(req);
       const useridd = user.userid;
       if (user.isAdmin) {
         //onst {routeid} = req.params;
         await db("se_project.routes")
-          .where({ id: req.params.routeId })
-          .update({ routename: req.body.routename, id: req.params.routeId });
+          .where("id" ,req.params.routeId )
+          .update( "routename", req.body.routename );
         return res.status(200).send("routeid is updated successfully");
       }
       else {
@@ -611,11 +610,11 @@ module.exports = function (app) {
         return res.status(400).send("Payed Amount is required.");
       }
   
-      const ticket = { origin: origin, destination: destination, tripdate: tripDate, userid: user.id };
+      const ticket = { origin: origin, destination: destination, tripdate: tripDate, userid: user.userid };
       const [ticketid] = await db("se_project.tickets").insert(ticket).returning("*");
       const ticid = ticketid.id;
       console.log(ticid);
-      const transaction = { amount: payedamount, userid: user.id, purchasediid: ticid };
+      const transaction = { amount: payedamount, userid: user.userid, purchasediid: ticid };
       const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
   
       return res.status(200).json({ transactionid });
@@ -625,30 +624,6 @@ module.exports = function (app) {
     }
   });
   
-  
-
-
-  // app.post("/api/v1/payment/subscription", async function (req, res) {
-  //   try{
-  //       const user = await getUser(req);
-  //       const {creditcardnumber, holdername, payedamount, subtype, zoneid} = req.body;
-
-  //       const subscription = {subtype: subtype, zoneid: zoneid, userid: user.id, nooftickets: numOftickets};
-  //       console.log(subscription);
-  //       console.log("bekh");
-  //       const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("*");
-  //       const subid = subscriptionid.id;
-  //       console.log(subid)
-  //       const transaction = {amount: payedamount, userid: user.id, purchasediid: subid};
-  //       const [transactionid] = await db("se_project.transactions").insert(transaction).returning("*");
-
-
-  //       return res.status(200).json({transactionid, subscriptionid});
-  //   }catch(e){
-  //       console.log(e.message);
-  //       return res.status(400).send("Could not subscribe");
-  //   }
-  // });
   //this is farida's code
 //start of eyad's code
 //table viewing routes
@@ -674,5 +649,68 @@ app.get("/api/v1/zones", async function(req,res) {
 const allzones = await db("se_project.zones").select("*")
 return res.status(200).json(allzones);
 });
+
+app.put("/api/v1/zones/:zoneId", async function(req,res){
+  try{
+    const user = await getUser(req);
+    if(user.isAdmin){
+   
+    const updatedprice = await db("se_project.zones").where("id", req.params.zoneId).update("price", req.body.price);
+    console.log(updatedprice.price);
+    return res.status(200).send(updatedprice.price);
+    }else{
+      return res.status(400).send("You are not authorized to update zone price");
+    }
+  } catch(e){
+    console.log(e.message);
+    return res.status(400).send("failed to update");
+} 
+
+});
 //this is eyads code(mn wp) 
+app.post("/api/v1/refund/:ticketId", async (req, res) => {
+  const { ticketId } = req.params;
+  console.log(ticketId)
+  const user = await getUser(req);
+  const userid = user.userid;
+
+  const ticket = await db("se_project.tickets")
+    .select('*')
+    .where({ id: ticketId })
+    .first();
+  console.log(ticket)
+  if (!ticket) {
+    return res.status(404).json({ error: "Ticket not found" });
+  }
+
+  // Check if ticket is future-dated
+  const currentDate = new Date();
+  const ticketDate = new Date(ticket.tripdate);
+ 
+  console.log(currentDate)
+  console.log(ticketDate)
+  if (ticketDate.getTime() > currentDate.getTime()) {
+    console.log("ana fl if")
+    // Insert refund request
+    const transaction = await db("se_project.transactions").select('*').where("purchasedid", ticketId ).first();
+    console.log(transaction)
+    if (!transaction) {
+      return res.status(500).json({ error: "Transaction not found" });
+    }
+    const refundamount = transaction.amount;
+    console.log(refundamount)
+    const refundRequest = await db('se_project.refund_requests').insert({
+      status: 'pending',
+      userid: userid,
+      refundamount: refundamount,
+      ticketid: ticketId,
+    });
+
+    // Delete ticket
+    return res.json( "Ticket refunded successfully");
+  } else {
+  
+    return res.status(500).json( "Ticket already used" );
+  }
+});
 };

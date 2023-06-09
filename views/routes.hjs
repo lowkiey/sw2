@@ -33,7 +33,7 @@
               {{/isAdmin}}
               <li><a href="/subscriptions">Subscriptions</a></li>
               <li><a href="/tickets">Tickets</a></li>
-              <li class = "opened-link"><a href="/routes">Routes</a></li>
+              <li class="opened-link"><a href="/routes">Routes</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li><a href="javascript:void(0)"
@@ -44,7 +44,6 @@
         </div>
       </nav>
     </div>
-    <br />
     <div style="position:absolute; right:0;">
       {{#isAdmin}}
       <button id="addroute" type="button" class="btn btn-danger creditcard-button"
@@ -59,11 +58,11 @@
       <thead>
         <tr>
           <div style="position:absolute; right:0;">
-          <th scope="col">id</th>
-          <th scope="col">Route Name</th>
-          <th scope="col">FromStationID</th>
-          <th scope="col">ToStationID</th>
-          <th scope="col">Action</th>
+            <th scope="col">id</th>
+            <th scope="col">Route Name</th>
+            <th scope="col">From Station</th>
+            <th scope="col">To Station</th>
+            <th scope="col">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -71,8 +70,8 @@
         <tr>
           <td>{{id}}</td>
           <td>{{routename}}</td>
-          <td>{{fromstationid}}</td>
-          <td>{{tostationid}}</td>
+          <td>{{FromStation}}</td>
+          <td>{{ToStation}}</td>
           <td>
             <div style="position:absolute; left: 1405px;">
               {{#isAdmin}}

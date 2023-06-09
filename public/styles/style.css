@@ -143,45 +143,7 @@
   box-shadow: 0 5px #666;
   transform: translateY(4px);
 }
-/* 
-.image_ticket{
-  background-color: transparent;
-  border-radius: 30px;
-  width: 140px;
-  height: 140px;
-  object-fit: cover;
-  position: absolute;
-  left: 960px;
-  top: 150px;
 
-}
-.image_ticket-container{
-  display: flex;
-  justify-content: center;
-
-}
-.button_ticket{
-  background-color: azure;
-  size: 50px;
-  border-radius: 12px;
-  transition-duration: 0.4s;
-  width: 150px;
-  height: 60px;
-  font-size: 20px;
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  position: absolute;
-  left: 950px;
-  top: 300px;
-}
-.button_ticket:hover {
-  background-color: #4c81de; 
-  color: black;
-  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
-}
-.button_ticket:active{
-  box-shadow: 0 5px #666;
-  transform: translateY(4px);
-} */
 body{
   font-size: 16px;
 }
@@ -208,4 +170,15 @@ table {
 }
 .opened-link a {
 background-color: #333;
+}
+
+.refund-button {
+  border-radius: 50px;
+  font-size: 16px;
+  border-radius: 50px;
+  margin-top: -5px;
+  margin-left: 55px;
+  font-size: 16px;
+  box-shadow:  0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19) ;
+
 }

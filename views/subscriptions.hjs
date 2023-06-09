@@ -2,60 +2,34 @@
 <html>
 
 <head>
+  <style>
+    .buy-button {
+      position: fixed;
+      bottom: 90px;
+      left: 80%;
+      transform: translateX(-10%);
+    }
+  </style>
+
   <title>Subscriptions</title>
   <link rel='stylesheet' href='/styles/bootstrap.min.css' />
   <link rel='stylesheet' href='/styles/style.css' />
   <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
   <script src="/js/bootstrap.min.js" type="text/javascript"></script>
+
+
+
 </head>
 
 <body>
   <script>
-    $(document).ready(function () {
-      $.ajax({
-        type: "GET",
-        url: '/api/v1/zones',
-        success: function (data) {
-          console.log(data);
-
-          // Parse the JSON data
-          var jsonData = JSON.parse(data);
-
-          for (let row of jsonData) {
-            $('#tbody').append(`
-              <tr>
-                <td class="text-center">${row.id}</td>
-                <td class="text-center">${row.subtype}</td>
-                <td class="text-center">${row.zoneid}</td>
-                <td class="text-center">${row.userid}</td>
-                <td class="text-center">${row.nooftickets}</td>
-               
-              </tr>
-            `);
-          }
-        },
-        error: function (error) {
-          alert(error);
-          console.log("error message", error.responseText);
-        }
-      });
-    });
-  </script>
-
-  <script>
-    function openCenteredWindow(url, title, width, height) {
-      const screenWidth = window.screen.width;
-      const screenHeight = window.screen.height;
-
-      const left = (screenWidth / 2) - (width / 2);
-      const top = (screenHeight / 2) - (height / 2);
-
-      window.open(url, title, `width=${width},height=${height},left=${left},top=${top}`);
+    function buy() {
+      // alert('Check the zones!');
+      window.location.href = '/zones';
     }
   </script>
   <div>
-    <div>
-      <nav class="navbar navbar-inverse" style="padding-left:130px;">
+     <nav class="navbar navbar-inverse" style="padding-left:130px;">
         <div class="container-fluid">
           <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
@@ -68,15 +42,16 @@
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
               <li><a href="/stations_example">Station</a></li>
-               {{#isAdmin}}
+              
+              {{#isAdmin}}
               <li><a href="/users">Users</a></li>
-               {{/isAdmin}}
-              <li><a href="/subscriptions">Subscriptions</a></li>
+              {{/isAdmin}}
+              <li class ="opened-link"><a href="/subscriptions">Subscriptions</a></li>
               <li><a href="/tickets">Tickets</a></li>
               <li><a href="/routes">Routes</a></li>
-
             </ul>
             <ul class="nav navbar-nav navbar-right">
+             
               <li><a href="javascript:void(0)"
                   onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset Password</a></li>
               <li><a href="/">Logout</a></li>
@@ -84,22 +59,34 @@
           </div>
         </div>
       </nav>
-    </div>
-  </div>
-
-  <div class="container">
-    <table class="table table-striped">
+      </div>
+    <br />
+    <table class="table">
       <thead>
         <tr>
-          <th class="text-center">id</th>
-          <th class="text-center">zoneid</th>
-          <th class="text-center">userid</th>
-          <th class="text-center">nooftickets</th>
-          <th class="text-center">subtype</th>
+          <th scope="col">ID</th>
+          <th scope="col">Subscription Type</th>
+          <th scope="col">Zone ID</th>
+          <th scope="col">User ID</th>
+          <th scope="col">Number of Tickets</th>
         </tr>
+      <tbody>
+
+        {{#subscriptions}}
+        <tr>
+          <td>{{id}}</td>
+          <td>{{subtype}}</td>
+          <td>{{zoneid}}</td>
+          <td>{{userid}}</td>
+          <td>{{nooftickets}}</td>
+        </tr>
+        {{/subscriptions}}
+      </tbody>
       </thead>
-      <tbody id="tbody"></tbody>
+
     </table>
+    <button class="btn btn-primary btn-lg buy-button" onclick="buy()">Buy Subscription Here</button>
+
   </div>
 </body>
 

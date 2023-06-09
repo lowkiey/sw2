@@ -4,7 +4,8 @@
 <head>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css' />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.min.js"
+    type="text/javascript"></script>
 </head>
 
 <body>
@@ -12,10 +13,10 @@
   <script>
     $(document).ready(function () {
       // Function to fetch stations and populate dropdowns
-      function fetchStations() {
+      function fetchRoutes() {
         $.ajax({
-          type: "PUT",
-          url: "/api/v1/route/:routeIds",
+          type: "GET",
+          url: "/api/v1/routes",
           success: function (data) {
             if (data) {
               data.sort((a, b) => a.id - b.id);
@@ -23,7 +24,7 @@
               const routeIds = $("#routeIds");
               routeIds.empty();
               data.forEach(route => {
-                routeIds.append(`<option value="${route.id}">${station.stationname}</option>`);
+                routeIds.append(`<option value="${route.id}">${route.routename}</option>`);
               });
             }
           },
@@ -33,27 +34,27 @@
         });
       }
 
-      // Fetch stations on page load
-      fetchStations();
+      // Fetch routes on page load
+      fetchRoutes();
 
       // Attach event handler using on method
       $(document).on("click", "#submit", function () {
-        const stationname = $("#stationname").val();
-        const stationid = $("#stationid").val();
-        console.log(stationname);
-        console.log(stationid);
-        if (stationid && stationname) {
+        const routename = $("#routename").val();
+        const routeIds = $("#routeIds").val();
+        console.log(routename);
+        console.log(routeIds);
+        if (routeIds && routename) {
           $.ajax({
             type: "PUT",
-            url: `/api/v1/station/${stationid}`,
+            url: `/api/v1/route/${routeIds}`,
             data: {
-              stationname: stationname,
+              routename: routename,
             },
             success: function (data) {
               if (data) {
-                alert('Station Updated');
+                alert('Route Updated');
                 window.opener.location.reload(); // Refresh the page
-                window.close(); 
+                window.close();
               }
             },
             error: function (err) {
@@ -70,19 +71,19 @@
     <br />
     <form class="form-horizontal">
       <div class="form-group">
-        <label for="stationid" class="col-sm-2 control-label">Choose Station
+        <label for="routeIds" class="col-sm-2 control-label">Choose Route
         </label>
         <div class="col-sm-10">
-          <select id="stationid" class="form-control">
+          <select id="routeIds" class="form-control">
             <!-- Options will be dynamically populated using JavaScript -->
           </select>
         </div>
       </div>
 
       <div class="form-group">
-        <label for="stationname" class="col-sm-2 control-label">New Name:</label>
+        <label for="routename" class="col-sm-2 control-label">New Name:</label>
         <div class="col-sm-10">
-          <input type="text" class="form-control" id="stationname" placeholder="Enter new name">
+          <input type="text" class="form-control" id="routename" placeholder="Enter new name">
         </div>
       </div>
 
@@ -92,7 +93,7 @@
         </div>
       </div>
     </form>
-    <label id="updateStation"></label>
+    <label id="updateRoute"></label>
   </div>
 
 </body>

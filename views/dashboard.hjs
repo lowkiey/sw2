@@ -59,9 +59,7 @@
               <li><a href="/routes">Routes</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-              {{#isAdmin}}
-              <li><a href="/dashboardAdmin" onclick="checkAdminAccess(event)">Admin Access</a></li>
-              {{/isAdmin}}
+             
               <li><a href="javascript:void(0)"
                   onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset Password</a></li>
               <li><a href="/">Logout</a></li>
@@ -88,7 +86,7 @@
     <img src="/images/.jpg" alt="Image" class="image_ticket">
   </div>
   <button type="button" class="button_ticket" onclick="openCenteredWindow('/tickets', 'Purchase Ticket', 650, 600)">Purchase
-    Ticket</button>
-</body> --}}
+    Ticket</button>--}}
+</body>
 
 </html>

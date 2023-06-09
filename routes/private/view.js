@@ -50,8 +50,8 @@ module.exports = function (app) {
 
   app.get('/tickets', async function (req, res) {
     const user = await getUser(req);
-    const tickets = await db.select('*').from('se_project.tickets');
-    return res.render('tickets', { ...user,tickets });
+        const tickets = await db.select('*').from('se_project.tickets');
+    return res.render('tickets', { ...user, tickets });
   });
   app.get('/newpassword', async function (req, res) {
     const user = await getUser(req);
@@ -75,27 +75,53 @@ module.exports = function (app) {
   app.get('/paybysub', async function (req, res) {
     return res.render('paybysub');
   });
-    app.get('/stations_example', async function(req, res) {
+  app.get('/stations_example', async function (req, res) {
     const user = await getUser(req);
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
-    app.get('/addStation', async function(req, res) { 
-      const station = await db.select('*').from('se_project.stations');
-      return res.render('addStation', { station });
+  app.get('/addStation', async function (req, res) {
+    const station = await db.select('*').from('se_project.stations');
+    return res.render('addStation', { station });
   });
-  app.get('/updateStation', async function(req, res) { 
+  app.get('/updateStation', async function (req, res) {
     const station = await db.select('*').from('se_project.stations');
     return res.render('updateStation', { station });
-});
-  app.get('/routes', async function(req, res) {
-    const user = await getUser(req);
-    const routes = await db.select('*').from('se_project.routes');
-    return res.render('routes', {...user, routes });
   });
-  app.get('/addRoute', async function(req, res) {
+  app.get('/routes', async function (req, res) {
+    const user = await getUser(req);
+    const routes = await db.select('se_project.routes.id', 'se_project.routes.routename', 'fromstation.stationname AS FromStation', 'tostation.stationname AS ToStation')
+    .from('se_project.routes')
+    .innerJoin("se_project.stations AS fromstation", 'fromstation.id', '=', 'se_project.routes.fromstationid')
+    .innerJoin("se_project.stations AS tostation", 'tostation.id', '=', 'se_project.routes.tostationid');
+    console.log(routes)
+    return res.render('routes', { ...user, routes });
+  });
+  app.get('/addRoute', async function (req, res) {
     const routes = await db.select('*').from('se_project.routes');
-    return res.render('addRoute', {routes });
+    return res.render('addRoute', { routes });
+  });
+  app.get('/updateRoute', async function (req, res) {
+    const routes = await db.select('*').from('se_project.routes');
+    return res.render('updateRoute', { routes });
+  });
+  app.get('/updateZones', async function (req, res) {
+    const routes = await db.select('*').from('se_project.routes');
+    return res.render('updateZones', { routes });
+  });
+  app.get('/subscriptions', async function (req, res) {
+    const user = await getUser(req);
+    const subscriptions = await db.select('*').from('se_project.subsription');
+    return res.render('Subscriptions', { ...user, subscriptions });
+
+  });
+  app.get('/zones', async function (req, res) {
+    const user = await getUser(req);
+    const zones = await db.select('*').from('se_project.zones');
+    return res.render('zones', { ...user, zones });
+
   });
 };
+
+
 
