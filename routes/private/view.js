@@ -121,7 +121,14 @@ module.exports = function (app) {
     return res.render('zones', { ...user, zones });
 
   });
+  app.get('/rides', async function(req, res) {
+    const rides = await db.select('*').from('se_project.rides');
+    return res.render('rides' , {rides});
+      });  
 };
 
-
+app.get('/rides', async function(req, res) {
+  const rides = await db.select('*').from('se_project.rides');
+  return res.render('rides' , {rides});
+    });  
 

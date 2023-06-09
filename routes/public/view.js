@@ -15,6 +15,4 @@ module.exports = function (app) {
     const users = await db.select('*').from('se_project.users');
     return res.render('user', { users });
   });
-
-
 };
