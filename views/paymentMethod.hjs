@@ -10,10 +10,12 @@
 
 <body>
     <div class="modal-footer">
-        <button type="button" class="btn btn-danger creditcard-button"
-            onclick="window.location.href='/creditInfo'">Using Credit Card</button>
-        <button type="button" class="btn btn-danger subscription-button"
-            onclick="window.location.href='/paybysub'">Using Subscription</button>
+        <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-danger creditcard-button"
+                onclick="window.location.href='/creditInfo'">Using Credit Card</button>
+            <button type="button" class="btn btn-danger subscription-button"
+                onclick="window.location.href='/paybysub'">Using Subscription</button>
+        </div>
     </div>
 </body>
 

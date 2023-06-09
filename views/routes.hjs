@@ -36,8 +36,8 @@
               <li class="opened-link"><a href="/routes">Routes</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-               {{#isAdmin}}
-             <li><a href="/dashboardAdmin" >Admin Access</a></li>
+              {{#isAdmin}}
+              <li><a href="/dashboardAdmin">Admin Access</a></li>
               {{/isAdmin}}
               <li><a href="javascript:void(0)"
                   onclick="openCenteredWindow('/newpassword', 'Reset Password', 450, 440)">Reset Password</a></li>
@@ -49,18 +49,25 @@
     </div>
     <div style="position:absolute; right:0;">
       {{#isAdmin}}
-      <button id="addroute" type="button" class="btn btn-danger creditcard-button"
+      <button id="addroute" type="button" class="btn btn-danger routes-button"
         onclick="openCenteredWindow('/addRoute', 'add route', 450, 440)">Add Route</button>
-      <button id="updateroute" type="button" class="btn btn-danger creditcard-button"
+      <button id="updateroute" type="button" class="btn btn-danger routes-button"
         onclick="openCenteredWindow('/updateRoute', 'update route', 450, 440)">Update Route</button>
       {{/isAdmin}}
       <br />
     </div>
 
+    <head>
+      <style>
+        .table-container {
+          margin-left: 20px;
+        }
+      </style>
+    </head>
     <table class="table">
       <thead>
         <tr>
-          <div style="position:absolute; right:0;">
+          <div style="position:absolute; right:;">
             <th scope="col">id</th>
             <th scope="col">Route Name</th>
             <th scope="col">From Station</th>

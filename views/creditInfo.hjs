@@ -13,25 +13,27 @@
         $(document).ready(function () {
             $('.pay-button').click(function () {
                 const creditcardnumber = $('#creditcardnumber').val();
-                const holderName = $('#holderName').val();
+                const holdername = $('#holdername').val();
                 const payedamount = $('#payedamount').val();
                 const origin = $('#origin').val();
                 const destination = $('#destination').val();
-                const tripDate = $('#tripDate').val();
+                const tripdate = $('#tripdate').val();
                 $.ajax({
                     type: "POST",
                     url: '/api/v1/payment/ticket',
                     data: {
                         creditcardnumber: creditcardnumber,
-                        holderName: holderName,
+                        holdername: holdername,
                         payedamount: payedamount,
                         origin: origin,
                         destination: destination,
-                        tripDate: tripDate
+                        tripdate: tripdate
                     },
                     success: function (serverResponse) {
                         if (serverResponse) {
                             alert('Payment accepted');
+                            window.close();
+                            window.opener.location.reload();
                         }
                     },
                     error: function (errorResponse) {
@@ -49,8 +51,8 @@
         <label for="creditcardnumber">Credit Card Number:</label>
         <input type="text" id="creditcardnumber" required><br><br>
 
-        <label for="holderName">Card Holder Name:</label>
-        <input type="text" id="holderName" required><br><br>
+        <label for="holdername">Card Holder Name:</label>
+        <input type="text" id="holdername" required><br><br>
 
         <label for="payedamount">Amount:</label>
         <input type="number" id="payedamount" required><br><br>
@@ -61,8 +63,8 @@
         <label for="destination">Destination:</label>
         <input type="text" id="destination" required><br><br>
 
-        <label for="tripDate">Trip Date:</label>
-        <input type="text" id="tripDate" required><br><br>
+        <label for="tripdate">Trip Date:</label>
+        <input type="text" id="tripdate" required><br><br>
 
         <div class="modal-footer">
             <button type="button" class="btn btn-danger pay-button">Pay</button>

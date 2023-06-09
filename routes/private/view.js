@@ -145,7 +145,7 @@ app.get('/senior', async function(req, res) {
   });
   app.get('/subscriptions', async function (req, res) {
     const user = await getUser(req);
-    const subscriptions = await db.select('*').from('se_project.subsription');
+    const subscriptions = await db.select('*').from('se_project.subsription').where('userid', user.userid);
     return res.render('Subscriptions', { ...user, subscriptions });
 
   });

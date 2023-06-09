@@ -128,6 +128,11 @@ module.exports = function (app) {
       const [subscriptionid] = await db("se_project.subsription").insert(subscription).returning("*");
       const subid = subscriptionid.id;
       console.log(subid)
+
+      if (user.isSenior) {
+        payedamount = payedamount * 0.5;
+        console.log(payedamount);
+      }
       const transaction = { amount: payedamount, userid: user.id, purchasedid: subid };
       const [transactionid] = await db("se_project.transactions").insert(transaction).returning("*");
 
@@ -144,19 +149,27 @@ module.exports = function (app) {
     try {
       const user = await getUser(req);
       const { subid, origin, destination, tripdate } = req.body;
-      const subscription = await db.select("*").from("se_project.substription").where("subscriptionid", subid).andWhere("userid", user.id);
-      const ticket = { origin, destination, userid: user.id, tripdate: tripdate, subscriptionid: subid };
+
+      const subscription = await db.select("*").from("se_project.subsription").where("id", subid).andWhere("userid", user.id);
+      const ticket = { origin, destination, userid: user.id, tripdate: tripdate, subid: subid };
       const [ticketid] = await db("se_project.tickets").insert(ticket).returning("id");
-      return res.status(200).json({ ticketid });
+
+      const transaction = { amount: 0, userid: user.userid, purchasedid: ticketid.id };
+      const [transactionid] = await db("se_project.transactions").insert(transaction).returning("*");
+
+      return res.status(200).json(ticketid);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not purchase ticket");
     }
-  });app.post("/api/v1/refund/:ticketId", async (req, res) => {
+
+  });
+
+  app.post("/api/v1/refund/:ticketId", async (req, res) => {
     const { ticketId } = req.params;
     const user = await getUser(req);
     const userid = user.id;
-  
+
     const ticket = await db("se_project.tickets")
       .select('*')
       .where({ id: ticketId })
@@ -164,7 +177,7 @@ module.exports = function (app) {
     if (!ticket) {
       return res.status(404).json({ error: "Ticket not found" });
     }
-  
+
     // Check if ticket is future-dated
     const currentDate = new Date();
     if (ticket.tripdate > currentDate) {
@@ -176,7 +189,7 @@ module.exports = function (app) {
       if (!transaction) {
         return res.status(500).json({ error: "Transaction not found" });
       }
-  
+
       const refundamount = transaction.amount;
       const refundRequest = await db('se_project.refund_requests').insert({
         status: 'pending',
@@ -184,12 +197,12 @@ module.exports = function (app) {
         refundamount: refundamount,
         ticketid: ticketId,
       });
-  
+
       // Delete ticket
-      return res.json( "Ticket refunded successfully");
+      return res.json("Ticket refunded successfully");
     } else {
-    
-      return res.status(500).json( "Ticket already used" );
+
+      return res.status(500).json("Ticket already used");
     }
   });
 
@@ -201,7 +214,7 @@ module.exports = function (app) {
         const { refundstatus } = req.body;
         const { requestid } = req.params;
         console.log(requestid);
-        const refundrequest = await db("se_project.refund_requests").where({"id": requestid}).first();
+        const refundrequest = await db("se_project.refund_requests").where({ "id": requestid }).first();
         console.log(refundrequest);
         if (!refundrequest) {
           return res.status(404).send("Refund request not found");
@@ -209,9 +222,9 @@ module.exports = function (app) {
         const ticketid = refundrequest.ticketid;
         if (refundstatus === "Accept") {
           console.log("hi");
-          const subid = await db("se_project.tickets").where({"id": ticketid}).select("subid").first();
+          const subid = await db("se_project.tickets").where({ "id": ticketid }).select("subid").first();
           console.log(subid.subid);
-          const transactionid = await db("se_project.tickets").where({"id": ticketid}).select("id").first();
+          const transactionid = await db("se_project.tickets").where({ "id": ticketid }).select("id").first();
           console.log(transactionid);
           const sub = await db("se_project.subsription").where("id", subid.subid).first();
           console.log(sub.id);
@@ -219,16 +232,16 @@ module.exports = function (app) {
             console.log("hi");
             console.log(sub.id);
             //await db("se_project.tickets").where({"subid": sub.id}).del();
-            const ticketamount = await db("se_project.subsription").where({"id": subid.subid}).select("*").first();
+            const ticketamount = await db("se_project.subsription").where({ "id": subid.subid }).select("*").first();
             console.log(ticketamount.nooftickets);
             if (!ticketamount) {
               return res.status(404).send("Ticket not found");
             }
             console.log("mimimomo");
             ticketamount.nooftickets = ticketamount.nooftickets + 1;
-           const vare = await db("se_project.subsription").where("id", sub.id).update("nooftickets", ticketamount.nooftickets);
-           console.log(vare);
-           await db("se_project.refund_requests").where({"ticketid":transactionid.id}).update("status","Approve");;
+            const vare = await db("se_project.subsription").where("id", sub.id).update("nooftickets", ticketamount.nooftickets);
+            console.log(vare);
+            await db("se_project.refund_requests").where({ "ticketid": transactionid.id }).update("status", "Approve");;
             return res.status(200).send("Refund request accepted and ticket deleted");
           } else if (transactionid && ticketid === transactionid.purchaseid) {
             await db("se_project.tickets").where("id", ticketid).del();
@@ -237,7 +250,7 @@ module.exports = function (app) {
             return res.status(404).send("Ticket not found");
           }
         } else if (refundstatus === "Reject") {
-          await db("se_project.refund_requests").where("id", requestid).update("status","Decline");
+          await db("se_project.refund_requests").where("id", requestid).update("status", "Decline");
           return res.status(200).send("Refund request rejected and deleted");
         } else {
           return res.status(400).send("Invalid refund status");
@@ -419,7 +432,7 @@ module.exports = function (app) {
         const routeToDelete = await db("se_project.routes").where("id", routeId).first();
         // console.log(routeToDelete.id);
         const from = routeToDelete.fromstationid;
-        
+
         // console.log(from);
         let to = routeToDelete.tostationid;
         // console.log(to);
@@ -565,7 +578,7 @@ module.exports = function (app) {
         price = 10;
       }
       // res.status(200).send("price of ticket equal:", price);
-      res.status(200).json( price);
+      res.status(200).json(price);
     }
     catch (e) {
       console.log(e.message);
@@ -590,9 +603,9 @@ module.exports = function (app) {
       }
     } else {
       return res.status(400).send("You can't create station");
-    }     
+    }
   });
-  
+
 
 
   //ADMIN creates a route 
@@ -600,10 +613,10 @@ module.exports = function (app) {
     try {
       const user = await getUser(req);
       if (user.isAdmin) {
-        const {newStationId, connectedStationId, routeName } = req.body;
+        const { newStationId, connectedStationId, routeName } = req.body;
         if (!newStationId || !connectedStationId || !routeName) {
           return res.status(400).send("Missing required fields");
-        } 
+        }
         const connectedStationPosition = await db.select("stationposition").from("se_project.stations").where({ "id": connectedStationId }).first();
         console.log("hello");
         const routeid = await db.select("id").from("se_project.routes").where({ "routename": routeName }).first();
@@ -616,29 +629,29 @@ module.exports = function (app) {
             tostationid: connectedStationId,
           };
           console.log("hi");
-          await db("se_project.stations").where({"id": newStationId}).update({stationposition: "start" });
+          await db("se_project.stations").where({ "id": newStationId }).update({ stationposition: "start" });
           console.log("mimmiii");
-          await db("se_project.stations").where({"id":connectedStationId}).update({stationposition: "middle"});
+          await db("se_project.stations").where({ "id": connectedStationId }).update({ stationposition: "middle" });
           console.log("moomoooo");
           const route = await db("se_project.routes").insert(newroute).returning("*");
           console.log(route);
           const newstationroute = {
             stationid: newStationId,
-            routeid:route[0].id,
+            routeid: route[0].id,
           };
           console.log("alo");
           await db("se_project.stationroutes").insert(newstationroute);
           console.log(newstationroute);
 
           return res.status(200).json(route);
-        } 
+        }
         else if (connectedStationPosition === "end") {
           const newroute = {
             routename: routeName,
             fromstationid: connectedStationId,
             tostationid: newStationId,
           };
-          await db("se_project.stations").where("id", newStationId).update({stationposition: "end" });
+          await db("se_project.stations").where("id", newStationId).update({ stationposition: "end" });
           await db("se_project.stations").where("id", connectedStationId).update({ stationposition: "middle" });
           const route = await db("se_project.routes").insert(newroute).returning("*");
           const newstationroute = {
@@ -654,18 +667,27 @@ module.exports = function (app) {
       return res.status(400).send("Could not create route");
     }
   });
-  ///pay ticket for subscription:
+  ///pay ticket ONLINE:
   app.post("/api/v1/payment/ticket", async function (req, res) {
     try {
       const user = await getUser(req);
       const useridsubscription = await db.select("userid").from("se_project.subsription");
       if (useridsubscription != user.id) {
-        const { purchasediid, creditcardnumber, holdername, payedamount, origin, destination, tripdate } = req.body;
-        const transaction = { amount: payedamount, userid: user.id, purchasediid: purchasediid };
+        const {creditcardnumber, holdername, payedamount, origin, destination, tripdate } = req.body;
+         console.log(creditcardnumber, holdername, payedamount, origin, destination, tripdate);
+        const tid = await db("se_project.tickets").where("origin", origin).andWhere("destination", destination).andWhere("tripdate", tripdate).select("id").first(); 
+        console.log(tid.id);
+        if(user.isSenior){
+        const pamount = payedamount * 0.5;
+        const transaction = { purchasedid:tid.id, amount: pamount, userid: user.userid };
         const [transactionid] = await db("se_project.transactions").insert(transaction).returning("id");
-        //insert ticket into upcoming ride 
-        //const ticketinsert = await db("se_project.rides").insert(tripdate).returning("id","tripdate");
         return res.status(200).json({ transactionid });
+       }else{
+        const transaction = { purchasedid:tid.id, amount: payedamount, userid: user.userid };
+        const [transactionid2] = await db("se_project.transactions").insert(transaction).returning("id");
+        return res.status(200).json({ transactionid2 });
+      }
+       
       } else {
         return res.status(200).send("user has a subscription");
       }
@@ -677,54 +699,54 @@ module.exports = function (app) {
 
   //this is farida's code
   //start of eyad's code
-  app.put("/api/v1/requests/senior/:requestId", async function(req, res) {
+  app.put("/api/v1/requests/senior/:requestId", async function (req, res) {
     try {
-        let user = await getUser(req);
-        let { seniorstatus } = req.body;
-        let { requestId } = req.params;
-        let { userid } = await db("se_project.senior_requests").select("userid").where("id", requestId).first();
-        console.log(userid);
-        console.log(seniorstatus);
-        const nationalidcheck = await db("se_project.senior_requests").select("nationalid").where("userid", userid).first();
-        console.log(nationalidcheck)
-        if (seniorstatus === "approve"){
-            await db("se_project.senior_requests").where("id", requestId).update({ status: "accepted" });
-            await db("se_project.users").where("id", userid).update({ roleid: 3 }); // Update roleid to 3
-            const amountt = await db("se_project.transactions").select("amount").first();
-            const discount = amountt.amount - 0.5;
-            await db("se_project.senior_requests").where("id", requestId).del();
+      let user = await getUser(req);
+      let { seniorstatus } = req.body;
+      let { requestId } = req.params;
+      let { userid } = await db("se_project.senior_requests").select("userid").where("id", requestId).first();
+      console.log(userid);
+      console.log(seniorstatus);
+      const nationalidcheck = await db("se_project.senior_requests").select("nationalid").where("userid", userid).first();
+      console.log(nationalidcheck)
+      if (seniorstatus === "approve") {
+        await db("se_project.senior_requests").where("id", requestId).update({ status: "accepted" });
+        await db("se_project.users").where("id", userid).update({ roleid: 3 }); // Update roleid to 3
+        const amountt = await db("se_project.transactions").select("amount").first();
+        const discount = amountt.amount - 0.5;
+        await db("se_project.senior_requests").where("id", requestId).del();
 
-            return res.status(200).send("Senior request is accepted");
-        }
-       else if (seniorstatus === "decline") {
-            await db("se_project.senior_requests").where("id", requestId).del();
+        return res.status(200).send("Senior request is accepted");
+      }
+      else if (seniorstatus === "decline") {
+        await db("se_project.senior_requests").where("id", requestId).del();
 
-            return res.status(200).send("Senior request is rejected");
-        }
+        return res.status(200).send("Senior request is rejected");
+      }
     } catch (e) {
-        console.log(e.message);
-        return res.status(400).send("Rejected operation");
+      console.log(e.message);
+      return res.status(400).send("Rejected operation");
     }
-});
+  });
 
 
   //Update Zone Price 
-  app.put("/api/v1/zones/:zoneId", async function(req,res){
-    try{
+  app.put("/api/v1/zones/:zoneId", async function (req, res) {
+    try {
       const user = await getUser(req);
-      if(user.isAdmin){
-     
-      const updatedprice = await db("se_project.zones").where("id", req.params.zoneId).update("price", req.body.price);
-      console.log(updatedprice.price);
-      return res.status(200).send(updatedprice.price);
-      }else{
+      if (user.isAdmin) {
+
+        const updatedprice = await db("se_project.zones").where("id", req.params.zoneId).update("price", req.body.price);
+        console.log(updatedprice.price);
+        return res.status(200).send(updatedprice.price);
+      } else {
         return res.status(400).send("You are not authorized to update zone price");
       }
-    } catch(e){
+    } catch (e) {
       console.log(e.message);
       return res.status(400).send("failed to update");
-  } 
-  
+    }
+
   });
 
 

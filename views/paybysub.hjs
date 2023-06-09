@@ -28,6 +28,8 @@
                     success: function (serverResponse) {
                         if (serverResponse) {
                             alert('Payment accepted');
+                            window.close();
+                            window.opener.location.reload();
                         }
                     },
                     error: function (errorResponse) {
