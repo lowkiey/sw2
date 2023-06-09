@@ -82,11 +82,11 @@
   <button type="button" class="button_senior" onclick="openCenteredWindow('/senior', 'Senior Request', 450, 400)">Are
     you a Senior?</button>
 
-  {{!-- <div class="image_ticket_container">
-    <img src="/images/.jpg" alt="Image" class="image_ticket">
+  <div class="image_rides_container">
+    <img src="/images/rides.jpg" alt="Image" class="image_rides">
   </div>
-  <button type="button" class="button_ticket" onclick="openCenteredWindow('/tickets', 'Purchase Ticket', 650, 600)">Purchase
-    Ticket</button>--}}
+  <button type="button" class="button_rides" onclick=location.href="/rides">Simulate
+    Ride</button>
 </body>
 
 </html>

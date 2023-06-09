@@ -183,6 +183,16 @@ module.exports = function (app) {
       return res.status(400).send("Can't Simulate the ride");
     }
   });
+  app.get("/api/v1/rides", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const rides = await db.select("*").from("se_project.rides");
+      return res.status(200).json(rides);
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Can't get the rides");
+    }
+  });
   //Delete Station (admin):
   app.delete("/api/v1/station/:stationId", async function (req, res) {
     try {

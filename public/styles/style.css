@@ -182,3 +182,42 @@ background-color: #333;
   box-shadow:  0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19) ;
 
 }
+
+.image_rides{
+  background-color: transparent;
+  border-radius: 30px;
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  position: absolute;
+  left: 990px;
+  top: 150px;
+
+}
+.image_rides-container{
+  display: flex;
+  justify-content: center;
+
+}
+.button_rides{
+  background-color: azure;
+  size: 50px;
+  border-radius: 12px;
+  transition-duration: 0.4s;
+  width: 150px;
+  height: 60px;
+  font-size: 20px;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  position: absolute;
+  left: 980px;
+  top: 300px;
+}
+.button_rides:hover {
+  background-color: #4c81de; 
+  color: black;
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+.button_rides:active{
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}

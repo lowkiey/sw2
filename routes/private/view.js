@@ -50,7 +50,7 @@ module.exports = function (app) {
 
   app.get('/tickets', async function (req, res) {
     const user = await getUser(req);
-        const tickets = await db.select('*').from('se_project.tickets');
+    const tickets = await db.select('*').from('se_project.tickets');
     return res.render('tickets', { ...user, tickets });
   });
   app.get('/newpassword', async function (req, res) {
@@ -91,9 +91,9 @@ module.exports = function (app) {
   app.get('/routes', async function (req, res) {
     const user = await getUser(req);
     const routes = await db.select('se_project.routes.id', 'se_project.routes.routename', 'fromstation.stationname AS FromStation', 'tostation.stationname AS ToStation')
-    .from('se_project.routes')
-    .innerJoin("se_project.stations AS fromstation", 'fromstation.id', '=', 'se_project.routes.fromstationid')
-    .innerJoin("se_project.stations AS tostation", 'tostation.id', '=', 'se_project.routes.tostationid');
+      .from('se_project.routes')
+      .innerJoin("se_project.stations AS fromstation", 'fromstation.id', '=', 'se_project.routes.fromstationid')
+      .innerJoin("se_project.stations AS tostation", 'tostation.id', '=', 'se_project.routes.tostationid');
     console.log(routes)
     return res.render('routes', { ...user, routes });
   });
@@ -121,14 +121,8 @@ module.exports = function (app) {
     return res.render('zones', { ...user, zones });
 
   });
-  app.get('/rides', async function(req, res) {
+  app.get('/rides', async function (req, res) {
     const rides = await db.select('*').from('se_project.rides');
-    return res.render('rides' , {rides});
-      });  
-
-
-app.get('/rides', async function(req, res) {
-  const rides = await db.select('*').from('se_project.rides');
-  return res.render('rides' , {rides});
-    });  
-  };
+    return res.render('rides', { rides });
+  });
+};
