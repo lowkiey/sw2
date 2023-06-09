@@ -42,6 +42,19 @@ module.exports = function(app) {
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
+  app.get('/dashboardAdmin', async function(req, res) {
+    return res.render('dashboardAdmin');
+  });
+  app.get('/senior', async function(req, res) {
+    const senior= await db.select('*').from('se_project.senior_requests');
+    return res.render('senior', {senior});
+  });
+  app.get('/refund', async function(req, res) {
+    const refund= await db.select('*').from('se_project.refund_requests');
+    return res.render('refund', {refund});
+  });
+  
 
+ 
 };
   
