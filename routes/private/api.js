@@ -35,7 +35,20 @@ const getUser = async function (req) {
 
 module.exports = function (app) {
   // example
+<<<<<<< HEAD
+  
+  // app.post("/api/v1/payment/subscription", async function (req, res)) {
+  //   try{
+  //       const user = await getUser(req);
+        
+  //   }
+
+
+  // };
+  app.put("/users", async function (req, res) {
+=======
   app.get("/users", async function (req, res) {
+>>>>>>> d03dac7554b3ec10b2dc3f0dc035431b275ded3e
     try {
       const user = await getUser(req);
       const users = await db.select('*').from("se_project.users")

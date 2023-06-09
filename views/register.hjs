@@ -15,9 +15,15 @@
   <script>
     $(document).ready(function () {
       // Handle Registration Button Click
+<<<<<<< HEAD
+      $("#register").click(function() {   //this is what happens when 'register' is clicked (identfied through #'id')
+        const firstName = $('#firstName').val();
+        const lastName = $('#lastName').val();
+=======
       $("#register").click(function () {
         const firstname = $('#firstname').val();
         const lastname = $('#lastname').val();
+>>>>>>> d03dac7554b3ec10b2dc3f0dc035431b275ded3e
         const email = $('#email').val();
         const password = $('#password').val();
 
@@ -28,8 +34,8 @@
           password,
         };
 
-        $.ajax({
-          type: "POST",
+        $.ajax({    //accepts only one argument
+          type: "POST", 
           url: '/api/v1/user',
           data,
           success: function (serverResponse) {
