@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html>
+
+<head>
+
   <head>
-    <head>
-      <link rel='stylesheet' href='/styles/bootstrap.min.css' />
-      <link rel='stylesheet' href='/styles/style.css' />
-      <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
-      <script src="/js/bootstrap.min.js" type="text/javascript"></script>
-    </head>
+    <link rel='stylesheet' href='/styles/bootstrap.min.css' />
+    <link rel='stylesheet' href='/styles/style.css' />
+    <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
   </head>
-  <body>
-    <script>
-    $(document).ready(function(){    
+</head>
+
+<body>
+  <script>
+    $(document).ready(function () {
       // Handle Registration Button Click
-      $("#register").click(function() {
+      $("#register").click(function () {
         const firstname = $('#firstname').val();
         const lastname = $('#lastname').val();
         const email = $('#email').val();
@@ -29,64 +32,65 @@
           type: "POST",
           url: '/api/v1/user',
           data,
-          success: function(serverResponse) {
-            if(serverResponse) {
+          success: function (serverResponse) {
+            if (serverResponse) {
               alert('Successfully Registered User');
               location.href = '/';
             }
           },
-          error: function(errorResponse) {
-            if(errorResponse) {
+          error: function (errorResponse) {
+            if (errorResponse) {
               alert(`Error Register User: ${errorResponse.responseText}`);
-            }            
+            }
           }
         });
-      });      
+      });
     });
-    </script>
-    <div>
-      <nav class="navbar navbar-inverse" style="padding-left:130px;">
-          <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-          </ul>
-      </nav>
-    </div>
+  </script>
+  <div>
+    <nav class="navbar navbar-inverse" style="padding-left:130px;">
+      <ul class="nav navbar-nav">
+        <li><a href="/">Home</a></li>
+      </ul>
+    </nav>
+  </div>
 
-    <div class="center">
-      <h1>Register</h1>
-    </div>
-    <div style="padding-left: 500px">
+  <div class="center">
+    <h1>Register</h1>
+  </div>
+  <div style="padding-left: 500px">
     <form class="form-horizontal" style="width: 50%;">
       <div class="form-group">
-          <label for="firstname" class="col-sm-2 control-label">First Name</label>
-          <div class="col-sm-10">
-              <input type="text" class="form-control" id="firstname" name="firstname" placeholder="First Name" value="">
-          </div>
+        <label for="firstname" class="col-sm-2 control-label">First Name</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="firstname" name="firstname" placeholder="First Name" value="">
+        </div>
       </div>
       <div class="form-group">
-          <label for="lastname" class="col-sm-2 control-label">Last Name</label>
-          <div class="col-sm-10">
-              <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Last Name" value="">
-          </div>
+        <label for="lastname" class="col-sm-2 control-label">Last Name</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Last Name" value="">
+        </div>
       </div>
       <div class="form-group">
-          <label for="email" class="col-sm-2 control-label">Email</label>
-          <div class="col-sm-10">
-              <input type="text" class="form-control" id="email" name="email" placeholder="Email" value="">
-          </div>
+        <label for="email" class="col-sm-2 control-label">Email</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="email" name="email" placeholder="Email" value="">
+        </div>
       </div>
       <div class="form-group">
-          <label for="password" class="col-sm-2 control-label">Password</label>
-          <div class="col-sm-10">
-              <input type="password" class="form-control" id="password" name="password" placeholder="password" value="">
-          </div>
+        <label for="password" class="col-sm-2 control-label">Password</label>
+        <div class="col-sm-10">
+          <input type="password" class="form-control" id="password" name="password" placeholder="password" value="">
+        </div>
       </div>
       <div class="form-group">
-          <div class="col-sm-10 col-sm-offset-2">
-              <input id="register" name="register" type="button" value="Register" class="btn btn-primary">
-          </div>
+        <div class="col-sm-10 col-sm-offset-2">
+          <input id="register" name="register" type="button" value="Register" class="btn btn-primary">
+        </div>
       </div>
-  </form>
-    </div>
-  </body>
+    </form>
+  </div>
+</body>
+
 </html>
